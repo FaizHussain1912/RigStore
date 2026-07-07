@@ -1,5 +1,6 @@
 import React from 'react';
 import CategoryClient from './CategoryClient';
+export const dynamic = 'force-dynamic';
 
 async function getCategoryProducts(slug: string, searchParams?: any) {
   try {
@@ -16,6 +17,7 @@ async function getCategoryProducts(slug: string, searchParams?: any) {
 
     const res = await fetch(url.toString(), { cache: 'no-store' });
     if (!res.ok) {
+      console.error(`Failed to fetch category ${slug}. Status: ${res.status}`);
       return null;
     }
     return await res.json();
