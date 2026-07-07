@@ -13,6 +13,10 @@ export interface BentoBlock {
   buttonBgColorDark?: string;
   buttonTextColorLight?: string;
   buttonTextColorDark?: string;
+  bgColor?: string;
+  textColor?: string;
+  buttonBgColor?: string;
+  buttonTextColor?: string;
   tagline?: string;
   icon?: string;
 }

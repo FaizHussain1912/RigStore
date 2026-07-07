@@ -99,14 +99,14 @@ export default function BuilderClient() {
 
   const getTotalPrice = () => {
     let total = 0;
-    if (build.cpu) total += build.cpu.basePrice || 0;
-    if (build.motherboard) total += build.motherboard.basePrice || 0;
-    if (build.psu) total += build.psu.basePrice || 0;
-    if (build.pcCase) total += build.pcCase.basePrice || 0;
-    if (build.cooler) total += build.cooler.basePrice || 0;
-    build.ram.forEach(r => total += r.basePrice || 0);
-    build.gpu.forEach(g => total += g.basePrice || 0);
-    build.storage.forEach(s => total += s.basePrice || 0);
+    if (build.cpu) total += (build.cpu as any).basePrice || 0;
+    if (build.motherboard) total += (build.motherboard as any).basePrice || 0;
+    if (build.psu) total += (build.psu as any).basePrice || 0;
+    if (build.pcCase) total += (build.pcCase as any).basePrice || 0;
+    if (build.cooler) total += (build.cooler as any).basePrice || 0;
+    build.ram.forEach(r => total += (r as any).basePrice || 0);
+    build.gpu.forEach(g => total += (g as any).basePrice || 0);
+    build.storage.forEach(s => total += (s as any).basePrice || 0);
     return total;
   };
 
