@@ -23,7 +23,7 @@ export default function BuilderClient() {
   const [sortOption, setSortOption] = useState<string>('');
 
   useEffect(() => {
-    fetch('http://localhost:6767/api/products')
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6767'}/api/products`)
       .then(res => res.json())
       .then(data => {
         setCatalog(data);
