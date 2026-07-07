@@ -27,13 +27,12 @@ async function getCategoryProducts(slug: string, searchParams?: any) {
   }
 }
 
-export default async function CategoryPage({ 
-  params, 
-  searchParams 
-}: { 
-  params: { slug: string },
-  searchParams: { [key: string]: string | string[] | undefined }
+export default async function CategoryPage(props: { 
+  params: Promise<{ slug: string }>,
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
+  const params = await props.params;
+  const searchParams = props.searchParams ? await props.searchParams : undefined;
   // Fetch all products for the category once
   const result = await getCategoryProducts(params.slug);
   const products = result?.data;
