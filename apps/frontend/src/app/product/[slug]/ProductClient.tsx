@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useCart } from '../../CartContext';
 import { useWishlist } from '../../WishlistContext';
 import { ShoppingCart, Heart, ShieldCheck, Truck, ChevronRight } from 'lucide-react';
-import { useCurrency } from '../CurrencyContext';
+import { useCurrency } from '../../CurrencyContext';
 
 interface ProductClientProps {
   slug: string;
