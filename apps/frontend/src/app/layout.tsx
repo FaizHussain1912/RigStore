@@ -30,7 +30,7 @@ export default async function RootLayout({
       key: { in: ['PROMO_BANNER', 'HOMEPAGE_SIDEBAR', 'GENERAL_SETTINGS'] }
     }
   });
-  const settingsMap = settings.reduce((acc, s) => { acc[s.key] = s.value; return acc; }, {} as any);
+  const settingsMap = settings.reduce((acc: Record<string, any>, s: any) => { acc[s.key] = s.value; return acc; }, {} as Record<string, any>);
   
   const promoBanner = settingsMap['PROMO_BANNER'] || { visible: false, text: '', bgColor: '#f97316' };
   const customNavbarLinks = Array.isArray(settingsMap['HOMEPAGE_SIDEBAR']) ? settingsMap['HOMEPAGE_SIDEBAR'] : [];
