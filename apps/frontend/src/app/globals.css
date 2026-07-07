@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg: #f8fafc;
+    --color-surface: #ffffff;
+    --color-border: #e2e8f0;
+    --color-primary: #4f46e5; /* Electric Indigo */
+    --color-text: #0f172a;
+    --color-muted: #64748b;
+  }
+
+  .dark {
+    --color-bg: #0a0a0a;
+    --color-surface: #111111;
+    --color-border: #222222;
+    --color-primary: #e11d48; /* Rose */
+    --color-text: #ffffff;
+    --color-muted: #888888;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    @apply antialiased min-h-screen transition-colors duration-300;
+  }
+}
+
+@layer components {
+  .container-dense {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .glass-panel {
+    @apply bg-rig-surface border border-rig-border shadow-lg;
+  }
+
+  .spec-text {
+    @apply text-xs tracking-wide;
+  }
+}
+
+@layer utilities {
+  .custom-promo-banner {
+    background-color: var(--promo-bg-light);
+  }
+  .dark .custom-promo-banner {
+    background-color: var(--promo-bg-dark);
+  }
+  .custom-bento-block {
+    background-color: var(--bento-bg-light);
+  }
+  .dark .custom-bento-block {
+    background-color: var(--bento-bg-dark);
+  }
+  .custom-bento-btn {
+    background-color: var(--bento-btn-bg-light);
+    color: var(--bento-btn-text-light);
+  }
+  .dark .custom-bento-btn {
+    background-color: var(--bento-btn-bg-dark);
+    color: var(--bento-btn-text-dark);
+  }
+}

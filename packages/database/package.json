@@ -1,0 +1,19 @@
+{
+  "name": "@rigstore/database",
+  "version": "1.0.0",
+  "main": "src/client.ts",
+  "scripts": {
+    "generate": "prisma generate",
+    "push": "prisma db push"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.10.2",
+    "bcryptjs": "^3.0.3",
+    "googlethis": "^1.8.0",
+    "pg": "^8.22.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.10.2",
+    "typescript": "^5.3.3"
+  }
+}

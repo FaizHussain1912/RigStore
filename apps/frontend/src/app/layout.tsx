@@ -1,0 +1,76 @@
+import './globals.css';
+import type { Metadata } from 'next';
+import { CartProvider } from './CartContext';
+import { AuthProvider } from './AuthContext';
+import { WishlistProvider } from './WishlistContext';
+import { ToastProvider } from './ToastContext';
+import Navbar from '../components/Navbar';
+import CartSidebar from '../components/CartSidebar';
+import WishlistSidebar from '../components/WishlistSidebar';
+import TrackingProvider from './TrackingProvider';
+import Footer from '../components/Footer';
+import { ThemeProvider } from '../components/ThemeProvider';
+import { PrismaClient } from '@rigstore/database';
+import { CurrencyProvider } from './CurrencyContext';
+
+const prisma = new PrismaClient();
+
+export const metadata: Metadata = {
+  title: 'RigStore',
+  description: 'High-performance online computer hardware store',
+};
+
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const settings = await prisma.storeSetting.findMany({
+    where: { 
+      key: { in: ['PROMO_BANNER', 'HOMEPAGE_SIDEBAR', 'GENERAL_SETTINGS'] }
+    }
+  });
+  const settingsMap = settings.reduce((acc, s) => { acc[s.key] = s.value; return acc; }, {} as any);
+  
+  const promoBanner = settingsMap['PROMO_BANNER'] || { visible: false, text: '', bgColor: '#f97316' };
+  const customNavbarLinks = Array.isArray(settingsMap['HOMEPAGE_SIDEBAR']) ? settingsMap['HOMEPAGE_SIDEBAR'] : [];
+  const generalSettings = settingsMap['GENERAL_SETTINGS'] || {};
+  const storeCurrency = generalSettings.currency || 'PKR';
+
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          <CurrencyProvider initialCurrency={storeCurrency}>
+            <ToastProvider>
+              <AuthProvider>
+                <WishlistProvider>
+                  <CartProvider>
+                    <TrackingProvider>
+                      {(promoBanner.visible === true || promoBanner.visible === 'true') && promoBanner.text && (
+                        <div 
+                          className="w-full text-center py-2 text-sm font-bold px-4 text-white custom-promo-banner"
+                          style={{
+                            '--promo-bg-light': promoBanner.bgColorLight || '#4f46e5',
+                            '--promo-bg-dark': promoBanner.bgColorDark || '#e11d48'
+                          } as React.CSSProperties}
+                        >
+                          {promoBanner.text}
+                        </div>
+                      )}
+                      <Navbar customLinks={customNavbarLinks} />
+                      <CartSidebar />
+                      <WishlistSidebar />
+                      {children}
+                      <Footer />
+                    </TrackingProvider>
+                  </CartProvider>
+                </WishlistProvider>
+              </AuthProvider>
+            </ToastProvider>
+          </CurrencyProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
