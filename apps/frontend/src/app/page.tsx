@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 export default async function Page() {
   const settings = await prisma.storeSetting.findMany();
   const settingsMap: Record<string, any> = {};
-  settings.forEach(s => { settingsMap[s.key] = s.value; });
+  settings.forEach((s: any) => { settingsMap[s.key] = s.value; });
 
   let homeBanners: any[] = [];
   const homeBannerSetting = settingsMap['HOME_BANNER'];
