@@ -3,7 +3,8 @@ import CategoryClient from './CategoryClient';
 
 async function getCategoryProducts(slug: string, searchParams?: any) {
   try {
-    const url = new URL(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6767'}/api/category/${slug}`);
+    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6767').replace(/\/$/, '');
+    const url = new URL(`${baseUrl}/api/category/${slug}`);
     
     if (searchParams) {
       Object.entries(searchParams).forEach(([key, value]) => {

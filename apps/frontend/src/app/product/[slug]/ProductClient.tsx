@@ -22,7 +22,8 @@ export default function ProductClient({ slug }: ProductClientProps) {
   useEffect(() => {
     async function fetchProduct() {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6767'}/api/product/${slug}`);
+        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6767').replace(/\/$/, '');
+        const res = await fetch(`${baseUrl}/api/product/${slug}`);
         if (!res.ok) {
           throw new Error('Product not found');
         }
