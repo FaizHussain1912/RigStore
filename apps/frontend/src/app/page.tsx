@@ -7,6 +7,8 @@ import BentoGrid from '../components/BentoGrid';
 
 const prisma = new PrismaClient();
 
+export const revalidate = 15;
+
 export default async function Page() {
   const settings = await prisma.storeSetting.findMany();
   const settingsMap: Record<string, any> = {};

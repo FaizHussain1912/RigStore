@@ -9,50 +9,30 @@ import { useCurrency } from '../../CurrencyContext';
 
 interface ProductClientProps {
   slug: string;
+  initialProduct: any;
 }
 
-export default function ProductClient({ slug }: ProductClientProps) {
-  const [product, setProduct] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+export default function ProductClient({ slug, initialProduct }: ProductClientProps) {
+  const [product, setProduct] = useState<any>(initialProduct);
   const { addToCart } = useCart();
   const { addToWishlist } = useWishlist();
   const { formatPrice } = useCurrency();
 
   useEffect(() => {
-    async function fetchProduct() {
-      try {
-        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6767').replace(/\/$/, '');
-        const res = await fetch(`${baseUrl}/api/product/${slug}`);
-        if (!res.ok) {
-          throw new Error('Product not found');
-        }
-        const data = await res.json();
-        setProduct(data);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
+    if (initialProduct) {
+      setProduct(initialProduct);
     }
-    fetchProduct();
-  }, [slug]);
+  }, [initialProduct]);
 
   // Removed the local addToWishlist function since we use the context now.
 
-  if (loading) {
-    return (
-      <div className="container-dense pt-20 flex justify-center">
-        <div className="w-12 h-12 border-4 border-rig-primary border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
 
-  if (error || !product) {
+
+  if (!product) {
     return (
       <div className="container-dense pt-20 flex flex-col items-center">
         <h1 className="text-3xl font-bold text-rig-text mb-4">Product Not Found</h1>
-        <p className="text-rig-muted">{error}</p>
+        <p className="text-rig-muted">We could not find this product.</p>
         <Link href="/" className="mt-8 text-rig-primary hover:underline">Return to Home</Link>
       </div>
     );
