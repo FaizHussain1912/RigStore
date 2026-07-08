@@ -35,7 +35,12 @@ export default function Navbar({ customLinks = [] }: { customLinks?: {label: str
           </Link>
           <div className="hidden lg:flex gap-6 items-center">
             <MegaMenu />
-            <Link href="/builder" className="font-medium text-sm text-rig-muted hover:text-rig-text transition-colors">PC Builder</Link>
+            <Link href="/builder" prefetch={true} className="text-sm font-black text-rig-primary hover:text-rose-400 transition-colors">
+              PC BUILDER
+            </Link>
+            <Link href="/deals" prefetch={true} className="text-sm font-black text-blue-500 hover:text-blue-400 transition-colors">
+              PC DEALS
+            </Link>
             
             {/* Dynamic Custom Links from Admin */}
             {customLinks.map((link, idx) => (
@@ -203,6 +208,9 @@ export default function Navbar({ customLinks = [] }: { customLinks?: {label: str
               <Link href="/category/storage" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-bold text-rig-text">Storage</Link>
               
               <Link href="/builder" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-bold text-rig-text mt-4 pt-4 border-t border-rig-border">PC Builder</Link>
+              <Link href="/deals" onClick={() => setIsMobileMenuOpen(false)} className="text-xl font-black text-blue-500 hover:text-blue-400 transition-colors">
+                🔥 PC Deals
+              </Link>
               
               {customLinks.map((link, idx) => (
                 <Link key={idx} href={link.url || '#'} onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-bold text-rig-text">

@@ -58,9 +58,13 @@ export default function MegaMenu() {
             );
           })}
         </div>
-        <div className="bg-rig-background p-4 border-t border-rig-border text-center">
+        <div className="bg-rig-background p-4 border-t border-rig-border flex flex-col md:flex-row items-center justify-center gap-6">
           <Link href="/builder" prefetch={true} className="text-sm font-semibold text-rig-primary hover:text-rose-400 transition-colors">
             Not sure what to buy? Try our Custom PC Builder →
+          </Link>
+          <div className="hidden md:block w-px h-4 bg-rig-border"></div>
+          <Link href="/deals" prefetch={true} className="text-sm font-black text-blue-500 hover:text-blue-400 transition-colors flex items-center gap-1">
+            🔥 View Exclusive PC Deals
           </Link>
         </div>
       </div>
