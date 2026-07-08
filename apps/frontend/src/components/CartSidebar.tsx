@@ -43,6 +43,13 @@ export default function CartSidebar() {
                 </div>
                 <div className="flex-1">
                   <h4 className="text-sm font-semibold leading-tight mb-1">{item.name}</h4>
+                  
+                  {item.specs && Object.keys(item.specs).length > 0 && (
+                    <div className="text-[10px] text-rig-muted mb-2 leading-tight">
+                      {Object.values(item.specs).slice(0, 4).map(v => String(v)).join(' • ')}
+                    </div>
+                  )}
+
                   <div className="text-xs text-rig-muted mb-1">Qty: {item.quantity}</div>
                   <div className="text-rig-primary font-bold">{formatPrice(item.basePrice * item.quantity)}</div>
                 </div>

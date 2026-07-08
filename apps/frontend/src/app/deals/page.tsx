@@ -1,5 +1,6 @@
 import React from 'react';
 import DealsSlider from './DealsSlider';
+import ProductCard from '../../components/ProductCard';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -42,6 +43,15 @@ export default async function DealsPage() {
         </div>
         
         <DealsSlider deals={deals} />
+
+        <div className="mt-20">
+          <h2 className="text-3xl font-black text-rig-text mb-8 pl-4 border-l-4 border-rig-primary">All Deals</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {deals.map(deal => (
+              <ProductCard key={deal.id} product={deal} />
+            ))}
+          </div>
+        </div>
       </div>
     </main>
   );

@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, ShieldAlert, ShoppingCart } from 'lucide-rea
 import { useCart } from '../CartContext';
 import { useCurrency } from '../CurrencyContext';
 import Image from 'next/image';
+import Link from 'next/link';
 
 interface Product {
   id: string;
@@ -96,14 +97,14 @@ export default function DealsSlider({ deals }: { deals: Product[] }) {
           </div>
 
           {/* Titles */}
-          <div className="space-y-2">
-            <h2 className="text-4xl md:text-5xl font-black text-rig-text">
+          <Link href={`/product/${currentDeal.slug}`} className="space-y-2 block group">
+            <h2 className="text-4xl md:text-5xl font-black text-rig-text group-hover:text-blue-500 transition-colors">
               {currentDeal.name}
             </h2>
             <h3 className="text-4xl md:text-6xl font-black text-blue-600 dark:text-blue-500 leading-tight">
               {currentDeal.slug.replace('pc-deal-', '').replace(/-/g, ' ').toUpperCase() + ' PC'}
             </h3>
-          </div>
+          </Link>
 
           {/* Description / Specs */}
           <p className="text-lg text-rig-muted max-w-2xl leading-relaxed">
@@ -128,17 +129,17 @@ export default function DealsSlider({ deals }: { deals: Product[] }) {
         </div>
 
         {/* Image Section */}
-        <div className="flex-1 w-full max-w-lg relative min-h-[400px] flex items-center justify-center p-8 bg-rig-background rounded-2xl border border-rig-border/50 border-dashed">
+        <Link href={`/product/${currentDeal.slug}`} className="flex-1 w-full max-w-lg relative min-h-[400px] flex items-center justify-center p-8 bg-rig-background rounded-2xl border border-rig-border/50 border-dashed group cursor-pointer">
           {currentDeal.imageUrl ? (
             <img 
               src={currentDeal.imageUrl} 
               alt={currentDeal.name}
-              className="w-full h-full object-contain filter drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+              className="w-full h-full object-contain filter drop-shadow-2xl group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
             <div className="text-rig-muted font-mono">[ Render Image ]</div>
           )}
-        </div>
+        </Link>
       </div>
 
       {/* Pagination Dots */}

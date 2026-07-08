@@ -12,6 +12,7 @@ export type CartItem = {
   quantity: number;
   image?: string;
   productId?: string; // Reference for backend
+  specs?: any;
 };
 
 type CartContextType = {
@@ -95,7 +96,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       brand: i.product.brand,
       basePrice: i.product.basePrice,
       quantity: i.quantity,
-      image: i.product.imageUrl
+      image: i.product.imageUrl,
+      specs: i.product.specs
     }));
     setCart(formatted);
   };
@@ -138,7 +140,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
           brand: product.brand,
           basePrice: product.basePrice,
           quantity,
-          image: product.imageUrl
+          image: product.imageUrl,
+          specs: product.specs
         }]);
       }
     }

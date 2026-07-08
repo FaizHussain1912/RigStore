@@ -258,7 +258,14 @@ export default function CheckoutPage() {
                     <img src={item.image || '/images/gpu.png'} alt={item.name} className="w-full h-full object-contain" />
                   </div>
                   <div className="flex-grow">
-                    <div className="text-sm font-medium text-rig-text line-clamp-1">{item.name}</div>
+                    <div className="text-sm font-medium text-rig-text line-clamp-1 mb-1">{item.name}</div>
+                    
+                    {item.specs && Object.keys(item.specs).length > 0 && (
+                      <div className="text-[10px] text-rig-muted mb-1 leading-tight line-clamp-2">
+                        {Object.values(item.specs).slice(0, 4).map(v => String(v)).join(' • ')}
+                      </div>
+                    )}
+                    
                     <div className="text-xs text-rig-muted">Qty: {item.quantity}</div>
                   </div>
                   <div className="font-semibold text-rig-text">
