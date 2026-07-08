@@ -18,7 +18,7 @@ export default function ProductCard({ product, viewMode = 'grid' }: { product: a
     <div className={`glass-panel flex hover:border-rig-primary transition-colors duration-300 overflow-hidden ${isList ? 'flex-col md:flex-row' : 'flex-col h-full'}`}>
       {product.imageUrl && (
         <Link href={`/product/${product.slug}`} className={`relative bg-rig-background/80 block shrink-0 border-rig-border/50 ${isList ? 'w-full md:w-64 h-64 md:h-auto border-b md:border-b-0 md:border-r' : 'w-full aspect-square border-b'}`}>
-          <img src={product.imageUrl} alt={product.name} className="absolute inset-0 w-full h-full object-contain p-4 opacity-90 hover:opacity-100 transition-opacity" />
+          <img src={product.imageUrl} alt={product.name} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-contain p-4 opacity-90 hover:opacity-100 transition-opacity" />
         </Link>
       )}
       <div className={`p-4 flex-1 flex flex-col ${isList ? 'justify-center' : ''}`}>

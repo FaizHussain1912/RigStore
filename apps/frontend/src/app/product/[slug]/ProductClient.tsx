@@ -60,6 +60,7 @@ export default function ProductClient({ slug, initialProduct }: ProductClientPro
           <img 
             src={product.imageUrl} 
             alt={product.name}
+            fetchpriority="high"
             className="w-full max-w-md h-auto object-contain transform hover:scale-105 transition-transform duration-500"
           />
         </div>

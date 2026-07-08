@@ -44,6 +44,7 @@ export default function MegaMenu() {
               <Link 
                 key={cat.slug} 
                 href={`/category/${cat.slug}`}
+                prefetch={true}
                 className="flex items-start gap-3 p-2 rounded hover:bg-white/5 transition-colors group/item"
               >
                 <div className="p-2 rounded bg-rig-background border border-rig-border group-hover/item:border-rig-primary transition-colors">
@@ -58,7 +59,7 @@ export default function MegaMenu() {
           })}
         </div>
         <div className="bg-rig-background p-4 border-t border-rig-border text-center">
-          <Link href="/builder" className="text-sm font-semibold text-rig-primary hover:text-rose-400 transition-colors">
+          <Link href="/builder" prefetch={true} className="text-sm font-semibold text-rig-primary hover:text-rose-400 transition-colors">
             Not sure what to buy? Try our Custom PC Builder →
           </Link>
         </div>
