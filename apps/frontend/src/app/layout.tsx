@@ -12,6 +12,7 @@ import Footer from '../components/Footer';
 import { ThemeProvider } from '../components/ThemeProvider';
 import { PrismaClient } from '@rigstore/database';
 import { CurrencyProvider } from './CurrencyContext';
+import NextTopLoader from 'nextjs-toploader';
 
 const prisma = new PrismaClient();
 
@@ -40,6 +41,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
+        <NextTopLoader color="#FF0000" showSpinner={false} height={3} />
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
           <CurrencyProvider initialCurrency={storeCurrency}>
             <ToastProvider>
