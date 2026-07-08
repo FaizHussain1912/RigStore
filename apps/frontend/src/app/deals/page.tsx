@@ -42,7 +42,7 @@ export default async function DealsPage() {
         </div>
         
         {deals && deals.length > 0 ? (
-          <CategoryClient initialProducts={deals} categorySlug="pc-deals" />
+          <CategoryClient products={deals} categoryName="PC Deals" />
         ) : (
           <div className="min-h-[40vh] flex items-center justify-center">
             <h2 className="text-2xl text-rig-muted">No Deals Currently Active</h2>
