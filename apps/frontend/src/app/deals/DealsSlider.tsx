@@ -129,7 +129,7 @@ export default function DealsSlider({ deals }: { deals: Product[] }) {
         </div>
 
         {/* Image Section */}
-        <Link href={`/product/${currentDeal.slug}`} className="flex-1 w-full max-w-lg relative min-h-[400px] flex items-center justify-center p-8 bg-rig-background rounded-2xl border border-rig-border/50 border-dashed group cursor-pointer">
+        <Link href={`/product/${currentDeal.slug}`} className="flex-1 w-full max-w-lg relative min-h-[400px] flex items-center justify-center p-8 bg-rig-background rounded-2xl group cursor-pointer">
           {currentDeal.imageUrl ? (
             <img 
               src={currentDeal.imageUrl} 
