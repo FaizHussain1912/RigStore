@@ -108,6 +108,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const addToCart = async (product: any, quantity: number = 1) => {
+    // OPTIMISTIC UI UPDATE
+    const existing = cart.find((item) => item.id === product.id);
+    let newLocalCart;
+    if (existing) {
+      newLocalCart = cart.map((item) =>
+        item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item
+      );
+    } else {
+      newLocalCart = [...cart, {
+        id: product.id,
+        productId: product.id,
+        sku: product.sku,
+        name: product.name,
+        brand: product.brand,
+        basePrice: product.basePrice,
+        quantity,
+        image: product.imageUrl,
+        specs: product.specs
+      }];
+    }
+    setCart(newLocalCart);
+    setIsCartOpen(true);
+
     if (user && token) {
       try {
         const res = await fetch(`${API_URL}/api/cart/items`, {
@@ -121,34 +144,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
         if (res.ok) {
           const data = await res.json();
           mapServerCart(data);
+        } else {
+          setCart(cart); // Revert
         }
       } catch (err) {
         console.error('Failed to add to cart:', err);
+        setCart(cart); // Revert
       }
     } else {
-      const existing = cart.find((item) => item.id === product.id);
-      if (existing) {
-        saveGuestCart(cart.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item
-        ));
-      } else {
-        saveGuestCart([...cart, {
-          id: product.id,
-          productId: product.id,
-          sku: product.sku,
-          name: product.name,
-          brand: product.brand,
-          basePrice: product.basePrice,
-          quantity,
-          image: product.imageUrl,
-          specs: product.specs
-        }]);
-      }
+      localStorage.setItem('rigstore_guest_cart', JSON.stringify(newLocalCart));
     }
-    setIsCartOpen(true);
   };
 
   const removeFromCart = async (id: string) => {
+    // OPTIMISTIC UPDATE
+    const newLocalCart = cart.filter((item) => item.id !== id);
+    setCart(newLocalCart);
+
     if (user && token) {
       try {
         const res = await fetch(`${API_URL}/api/cart/items/${id}`, {
@@ -158,28 +170,37 @@ export function CartProvider({ children }: { children: ReactNode }) {
         if (res.ok) {
           const data = await res.json();
           mapServerCart(data);
+        } else {
+          setCart(cart); // Revert
         }
       } catch (err) {
         console.error('Failed to remove from cart:', err);
+        setCart(cart); // Revert
       }
     } else {
-      saveGuestCart(cart.filter((item) => item.id !== id));
+      localStorage.setItem('rigstore_guest_cart', JSON.stringify(newLocalCart));
     }
   };
 
   const clearCart = async () => {
+    // OPTIMISTIC UPDATE
+    setCart([]);
+
     if (user && token) {
       try {
-        await fetch(`${API_URL}/api/cart`, {
+        const res = await fetch(`${API_URL}/api/cart`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        setCart([]);
+        if (!res.ok) {
+           setCart(cart); // Revert
+        }
       } catch (err) {
         console.error('Failed to clear cart:', err);
+        setCart(cart);
       }
     } else {
-      saveGuestCart([]);
+      localStorage.setItem('rigstore_guest_cart', JSON.stringify([]));
     }
   };
 
