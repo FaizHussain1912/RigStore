@@ -1,6 +1,5 @@
 import React from 'react';
-import DealsSlider from './DealsSlider';
-import ProductCard from '../../components/ProductCard';
+import CategoryClient from '../category/[slug]/CategoryClient';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -35,23 +34,20 @@ export default async function DealsPage() {
   return (
     <main className="min-h-screen bg-rig-background pt-8 pb-20">
       <div className="container-dense">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-black text-rig-text mb-4">EXCLUSIVE PC DEALS</h1>
-          <p className="text-rig-muted max-w-2xl mx-auto">
+        <div className="mb-8 border-b border-rig-border pb-4">
+          <h1 className="text-4xl font-black text-blue-500 tracking-tight">EXCLUSIVE PC DEALS</h1>
+          <p className="text-rig-muted mt-2 max-w-2xl">
             Grab these pre-built performance rigs at unbeatable prices before they run out of stock. Carefully assembled and rigorously tested.
           </p>
         </div>
         
-        <DealsSlider deals={deals} />
-
-        <div className="mt-20">
-          <h2 className="text-3xl font-black text-rig-text mb-8 pl-4 border-l-4 border-rig-primary">All Deals</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {deals.map((deal: any) => (
-              <ProductCard key={deal.id} product={deal} />
-            ))}
+        {deals && deals.length > 0 ? (
+          <CategoryClient initialProducts={deals} categorySlug="pc-deals" />
+        ) : (
+          <div className="min-h-[40vh] flex items-center justify-center">
+            <h2 className="text-2xl text-rig-muted">No Deals Currently Active</h2>
           </div>
-        </div>
+        )}
       </div>
     </main>
   );
