@@ -16,6 +16,8 @@ import NextTopLoader from 'nextjs-toploader';
 
 const prisma = new PrismaClient();
 
+export const revalidate = 15;
+
 export const metadata: Metadata = {
   title: 'RigStore',
   description: 'High-performance online computer hardware store',
