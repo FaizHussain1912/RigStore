@@ -63,7 +63,7 @@ export default function MegaMenu() {
             Not sure what to buy? Try our Custom PC Builder →
           </Link>
           <div className="hidden md:block w-px h-4 bg-rig-border"></div>
-          <Link href="/deals" prefetch={true} className="text-sm font-black text-blue-500 hover:text-blue-400 transition-colors flex items-center gap-1">
+          <Link href="/deals" prefetch={true} className="text-sm font-black text-rig-primary hover:text-rose-400 transition-colors flex items-center gap-1">
             🔥 View Exclusive PC Deals
           </Link>
         </div>
