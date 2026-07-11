@@ -589,36 +589,36 @@ export default function AdminDashboard() {
   if (!isAdmin) return null;
 
   return (
-    <div className="flex min-h-screen bg-rig-background">
+    <div className="flex flex-col md:flex-row min-h-screen bg-rig-background">
       {/* Sidebar */}
-      <aside className="w-64 bg-rig-surface border-r border-rig-border flex flex-col hidden md:flex">
-        <div className="p-6 border-b border-rig-border">
+      <aside className="w-full md:w-64 bg-rig-surface border-b md:border-b-0 md:border-r border-rig-border flex flex-col shrink-0">
+        <div className="p-6 border-b border-rig-border hidden md:block">
           <h2 className="text-xl font-bold text-rig-primary tracking-tight">RIGSTORE ADMIN</h2>
         </div>
-        <nav className="flex-1 p-4 space-y-2">
-          <button onClick={() => handleTabChange('OVERVIEW')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors font-medium ${activeTab === 'OVERVIEW' ? 'bg-rig-primary/10 text-rig-primary' : 'text-rig-muted hover:text-rig-text hover:bg-rig-background'}`}>
+        <nav className="flex flex-row md:flex-col p-4 space-x-2 md:space-x-0 md:space-y-2 overflow-x-auto hide-scroll-on-desktop">
+          <button onClick={() => handleTabChange('OVERVIEW')} className={`shrink-0 md:w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors font-medium ${activeTab === 'OVERVIEW' ? 'bg-rig-primary/10 text-rig-primary' : 'text-rig-muted hover:text-rig-text hover:bg-rig-background'}`}>
             <LayoutDashboard className="w-5 h-5" /> Overview
           </button>
-          <button onClick={() => handleTabChange('ORDERS')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors font-medium ${activeTab === 'ORDERS' ? 'bg-rig-primary/10 text-rig-primary' : 'text-rig-muted hover:text-rig-text hover:bg-rig-background'}`}>
+          <button onClick={() => handleTabChange('ORDERS')} className={`shrink-0 md:w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors font-medium ${activeTab === 'ORDERS' ? 'bg-rig-primary/10 text-rig-primary' : 'text-rig-muted hover:text-rig-text hover:bg-rig-background'}`}>
             <Package className="w-5 h-5" /> Orders
           </button>
-          <button onClick={() => handleTabChange('INVENTORY')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors font-medium ${activeTab === 'INVENTORY' ? 'bg-rig-primary/10 text-rig-primary' : 'text-rig-muted hover:text-rig-text hover:bg-rig-background'}`}>
+          <button onClick={() => handleTabChange('INVENTORY')} className={`shrink-0 md:w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors font-medium ${activeTab === 'INVENTORY' ? 'bg-rig-primary/10 text-rig-primary' : 'text-rig-muted hover:text-rig-text hover:bg-rig-background'}`}>
             <PackageSearch className="w-5 h-5" /> Inventory
           </button>
-          <button onClick={() => {handleTabChange('PRODUCTS'); setShowProductForm(false);}} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors font-medium ${activeTab === 'PRODUCTS' ? 'bg-rig-primary/10 text-rig-primary' : 'text-rig-muted hover:text-rig-text hover:bg-rig-background'}`}>
+          <button onClick={() => {handleTabChange('PRODUCTS'); setShowProductForm(false);}} className={`shrink-0 md:w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors font-medium ${activeTab === 'PRODUCTS' ? 'bg-rig-primary/10 text-rig-primary' : 'text-rig-muted hover:text-rig-text hover:bg-rig-background'}`}>
             <Package className="w-5 h-5" /> Products
           </button>
-          <button onClick={() => handleTabChange('USERS')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors font-medium ${activeTab === 'USERS' ? 'bg-rig-primary/10 text-rig-primary' : 'text-rig-muted hover:text-rig-text hover:bg-rig-background'}`}>
+          <button onClick={() => handleTabChange('USERS')} className={`shrink-0 md:w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors font-medium ${activeTab === 'USERS' ? 'bg-rig-primary/10 text-rig-primary' : 'text-rig-muted hover:text-rig-text hover:bg-rig-background'}`}>
             <Users className="w-5 h-5" /> Customers
           </button>
-          <button onClick={() => handleTabChange('CUSTOMIZATION')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors font-medium ${activeTab === 'CUSTOMIZATION' ? 'bg-rig-primary/10 text-rig-primary' : 'text-rig-muted hover:text-rig-text hover:bg-rig-background'}`}>
+          <button onClick={() => handleTabChange('CUSTOMIZATION')} className={`shrink-0 md:w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors font-medium ${activeTab === 'CUSTOMIZATION' ? 'bg-rig-primary/10 text-rig-primary' : 'text-rig-muted hover:text-rig-text hover:bg-rig-background'}`}>
             <Settings className="w-5 h-5" /> Customization
           </button>
         </nav>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-8 overflow-y-auto">
+      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
         <h1 className="text-3xl font-bold mb-8">{activeTab.charAt(0) + activeTab.slice(1).toLowerCase()}</h1>
 
         {loading ? (
