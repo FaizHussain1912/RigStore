@@ -701,7 +701,7 @@ export default function AdminDashboard() {
                   </button>
                 </div>
 
-                <div className="glass-panel rounded-2xl overflow-hidden">
+                <div className="glass-panel rounded-2xl overflow-x-auto">
                   <table className="w-full text-left whitespace-nowrap">
                     <thead className="bg-rig-background border-b border-rig-border">
                       <tr>
@@ -815,7 +815,7 @@ export default function AdminDashboard() {
                     </select>
                   </div>
 
-                  <div className="glass-panel rounded-2xl overflow-hidden">
+                  <div className="glass-panel rounded-2xl overflow-x-auto">
                     <table className="w-full text-left">
                       <thead className="bg-rig-background border-b border-rig-border">
                         <tr>
@@ -866,7 +866,7 @@ export default function AdminDashboard() {
 
             {/* USERS TAB */}
             {activeTab === 'USERS' && (
-              <div className="glass-panel rounded-2xl overflow-hidden">
+              <div className="glass-panel rounded-2xl overflow-x-auto">
                 <table className="w-full text-left">
                   <thead className="bg-rig-background border-b border-rig-border">
                     <tr>
@@ -926,7 +926,7 @@ export default function AdminDashboard() {
                         <Plus size={18} /> Add Product
                       </button>
                     </div>
-                    <div className="glass-panel rounded-2xl overflow-hidden">
+                    <div className="glass-panel rounded-2xl overflow-x-auto">
                       <table className="w-full text-left">
                         <thead className="bg-rig-background border-b border-rig-border">
                           <tr>
