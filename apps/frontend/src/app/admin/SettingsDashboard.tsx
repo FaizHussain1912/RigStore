@@ -31,15 +31,15 @@ export default function SettingsDashboard({ siteSettings, updateSetting, handleS
   };
 
   return (
-    <div className="w-full bg-rig-surface text-rig-text rounded-2xl flex font-sans min-h-[700px]">
+    <div className="w-full bg-rig-surface text-rig-text rounded-2xl flex flex-col md:flex-row font-sans min-h-[700px]">
       
       {/* Sidebar */}
-      <div className="w-64 border-r border-rig-border p-4 flex flex-col gap-1">
+      <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-rig-border p-4 flex flex-row md:flex-col gap-2 overflow-x-auto hide-scroll-on-desktop md:overflow-visible">
         {tabs.map((tab) => (
           <button
             key={tab.name}
             onClick={() => setActiveTab(tab.name)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors ${
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors whitespace-nowrap ${
               activeTab === tab.name
                 ? 'bg-rig-background shadow-sm text-rig-text border border-rig-border'
                 : 'text-rig-muted hover:text-rig-text hover:bg-rig-background border border-transparent'
@@ -52,7 +52,7 @@ export default function SettingsDashboard({ siteSettings, updateSetting, handleS
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 p-8 overflow-y-auto">
+      <div className="flex-1 p-4 md:p-8 overflow-y-auto">
         <div className="max-w-3xl">
           
           <div className="mb-8">
@@ -61,7 +61,7 @@ export default function SettingsDashboard({ siteSettings, updateSetting, handleS
           </div>
 
           {activeTab === 'General' ? (
-            <div className="space-y-8 bg-rig-background border border-rig-border rounded-2xl p-8 shadow-sm">
+            <div className="space-y-8 bg-rig-background border border-rig-border rounded-2xl p-4 sm:p-8 shadow-sm">
               
               {/* Store Details */}
               <div>
