@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../AuthContext';
-import { Package, Clock, CheckCircle2, XCircle } from 'lucide-react';
+import { Package, Clock, CheckCircle2, XCircle, Printer } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { useCurrency } from '../CurrencyContext';
@@ -87,6 +87,165 @@ export default function OrdersPage() {
     }
   };
 
+  const handlePrintOrder = (order: any) => {
+    const itemsHtml = order.items?.map((item: any) => `
+      <tr>
+        <td>${item.product.name}</td>
+        <td class="center">${item.quantity}</td>
+        <td class="right">Rs ${(item.priceAtSale || item.product.basePrice || 0).toLocaleString()}</td>
+        <td class="right bold">Rs ${((item.priceAtSale || item.product.basePrice || 0) * item.quantity).toLocaleString()}</td>
+      </tr>
+    `).join('') || '';
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Invoice - ${order.id}</title>
+          <style>
+            @page { margin: 0; size: A4; }
+            body { 
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+              margin: 0; padding: 50px 60px; color: #333; font-size: 13px;
+              -webkit-print-color-adjust: exact; print-color-adjust: exact;
+            }
+            .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; }
+            .brand { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+            .brand svg { width: 32px; height: 32px; color: #f97316; }
+            .brand-text { font-size: 26px; font-weight: 800; color: #ef4444; margin: 0; letter-spacing: -0.5px; }
+            .brand-sub { font-size: 11px; color: #64748b; margin: 0; }
+            
+            .qr-code { text-align: center; }
+            .qr-code img { width: 80px; height: 80px; }
+            .qr-text { font-size: 9px; color: #64748b; margin-top: 4px; font-weight: 500; }
+
+            .invoice-title { font-size: 14px; font-weight: 800; color: #475569; letter-spacing: 1px; margin-bottom: 40px; }
+            
+            .info-section { display: flex; justify-content: space-between; margin-bottom: 50px; }
+            .info-block { width: 45%; }
+            .info-heading { font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 12px; }
+            .info-row { margin-bottom: 8px; color: #475569; font-size: 12px; }
+            .info-row strong { color: #0f172a; font-weight: 600; width: 120px; display: inline-block; }
+            
+            table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+            th { text-align: left; padding: 12px 8px; border-top: 2px solid #cbd5e1; border-bottom: 2px solid #cbd5e1; font-size: 11px; font-weight: 800; color: #475569; }
+            th.center { text-align: center; }
+            th.right, td.right { text-align: right; }
+            td { padding: 16px 8px; border-bottom: 1px solid #f1f5f9; font-size: 12px; color: #334155; font-weight: 600; }
+            td.bold { font-weight: 800; color: #0f172a; }
+
+            .totals-section { display: flex; justify-content: space-between; margin-top: 20px; }
+            .notes { width: 50%; font-size: 12px; color: #0f172a; font-weight: 700; }
+            .notes span { color: #64748b; font-weight: 600; }
+            .totals { width: 40%; }
+            .total-row { display: flex; justify-content: flex-end; margin-bottom: 10px; gap: 40px; color: #64748b; font-size: 13px; font-weight: 500; }
+            .total-row span:last-child { color: #475569; min-width: 80px; text-align: right; }
+            .grand-total { font-weight: 800; font-size: 15px; color: #0f172a; margin-top: 20px; padding-top: 15px; display: flex; justify-content: flex-end; gap: 40px; }
+            .grand-total span:last-child { color: #ef4444; min-width: 80px; text-align: right; }
+
+            .footer { position: fixed; bottom: 40px; left: 60px; right: 60px; display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; font-weight: 500; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div class="brand">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <h1 class="brand-text">RigStore</h1>
+              </div>
+              <p class="brand-sub">Karachi, Pakistan | Support: 0316-2975195</p>
+            </div>
+            <div class="qr-code">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=RigStore-Order-${order.id}" alt="QR" />
+              <div class="qr-text">Scan to Save Digital Copy</div>
+            </div>
+          </div>
+          
+          <div class="invoice-title">PACKING / INVOICE SLIP</div>
+          
+          <div class="info-section">
+            <div class="info-block">
+              <div class="info-heading">ORDER INFO</div>
+              <div class="info-row"><strong>Order ID:</strong> ${(order.id || '').toUpperCase().slice(0, 8)}</div>
+              <div class="info-row"><strong>Date:</strong> ${format(new Date(order.createdAt), 'MMMM d, yyyy')}</div>
+              <div class="info-row"><strong>Payment Method:</strong> ${order.paymentMethod || 'Cash on Delivery'}</div>
+            </div>
+            <div class="info-block">
+              <div class="info-heading">DELIVER TO</div>
+              <div class="info-row"><strong>Name:</strong> ${user?.name || 'Customer'}</div>
+              <div class="info-row"><strong>Phone:</strong> ${order.phone || 'N/A'}</div>
+              <div class="info-row"><strong>Address:</strong> ${order.address || 'N/A'}</div>
+            </div>
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>ITEM</th>
+                <th class="center">QTY</th>
+                <th class="right">PRICE</th>
+                <th class="right">SUBTOTAL</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsHtml}
+            </tbody>
+          </table>
+          
+          <div class="totals-section">
+            <div class="notes">Note: <span>${order.note || 'order'}</span></div>
+            <div class="totals">
+              <div class="total-row">
+                <span>Subtotal:</span>
+                <span>Rs ${order.totalAmount.toLocaleString()}</span>
+              </div>
+              <div class="total-row">
+                <span>Shipping Fee:</span>
+                <span>Rs 0</span>
+              </div>
+              <div class="grand-total">
+                <span>Grand Total:</span>
+                <span>Rs ${order.totalAmount.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="footer">
+            <span>https://rigstore.com</span>
+            <span>1/1</span>
+          </div>
+
+          <script>
+            window.onload = () => {
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `;
+    
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document;
+    if (doc) {
+      doc.open();
+      doc.write(html);
+      doc.close();
+      setTimeout(() => {
+        if (document.body.contains(iframe)) {
+          document.body.removeChild(iframe);
+        }
+      }, 10000);
+    }
+  };
+
   return (
     <main className="container-dense py-12">
       <h1 className="text-3xl font-bold mb-8 flex items-center gap-3">
@@ -123,9 +282,19 @@ export default function OrdersPage() {
                   </div>
                 </div>
                 
-                <div className={`px-3 py-1.5 rounded-full border flex items-center gap-2 text-sm font-semibold ${getStatusColor(order.status)}`}>
-                  {getStatusIcon(order.status)}
-                  {order.status}
+                
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className={`px-3 py-1.5 rounded-full border flex items-center gap-2 text-sm font-semibold ${getStatusColor(order.status)}`}>
+                    {getStatusIcon(order.status)}
+                    {order.status}
+                  </div>
+                  <button 
+                    onClick={() => handlePrintOrder(order)}
+                    className="p-1.5 rounded-full bg-rig-surface border border-rig-border text-rig-muted hover:text-rig-text hover:bg-rig-background transition-colors"
+                    title="Print Invoice"
+                  >
+                    <Printer className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
 
