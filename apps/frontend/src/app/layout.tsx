@@ -63,7 +63,7 @@ export default async function RootLayout({
                           {promoBanner.text}
                         </div>
                       )}
-                      <Navbar customLinks={customNavbarLinks} />
+                      <Navbar customLinks={customNavbarLinks} generalSettings={generalSettings} />
                       <CartSidebar />
                       <WishlistSidebar />
                       {children}

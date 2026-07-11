@@ -9,7 +9,7 @@ import { useAuth } from '../app/AuthContext';
 import { useWishlist } from '../app/WishlistContext';
 import Link from 'next/link';
 
-export default function Navbar({ customLinks = [] }: { customLinks?: {label: string, url: string}[] }) {
+export default function Navbar({ customLinks = [], generalSettings = {} }: { customLinks?: {label: string, url: string}[], generalSettings?: any }) {
   const { cart, setIsCartOpen } = useCart();
   const { user, token, logout, isAdmin } = useAuth();
   const { wishlistItems, setIsWishlistOpen } = useWishlist();
@@ -56,11 +56,11 @@ export default function Navbar({ customLinks = [] }: { customLinks?: {label: str
             <div className="hidden xl:flex items-center gap-4 ml-6 pl-6 border-l border-rig-border text-xs text-rig-muted">
               <div className="flex items-center gap-1.5 hover:text-rig-text transition-colors cursor-pointer">
                 <Phone size={14} className="text-rig-primary" />
-                <span>0326-2147419</span>
+                <span>{generalSettings.navbarPhone || '0326-2147419'}</span>
               </div>
               <div className="flex items-center gap-1.5 hover:text-rig-text transition-colors cursor-pointer">
                 <MapPin size={14} className="text-rig-primary" />
-                <span>Karachi, Pakistan</span>
+                <span>{generalSettings.navbarLocation || 'Karachi, Pakistan'}</span>
               </div>
             </div>
           </div>

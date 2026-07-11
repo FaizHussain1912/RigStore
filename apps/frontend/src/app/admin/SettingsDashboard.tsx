@@ -86,6 +86,24 @@ export default function SettingsDashboard({ siteSettings, updateSetting, handleS
                     />
                     <p className="text-xs text-rig-muted mt-1">This email will be used to send order confirmations and customer support replies.</p>
                   </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-rig-muted block">Navbar Phone Number</label>
+                    <input 
+                      value={generalSettings.navbarPhone ?? '0326-2147419'}
+                      onChange={(e) => updateGeneralSetting('navbarPhone', e.target.value)}
+                      placeholder="0326-2147419"
+                      className="w-full bg-rig-surface border border-rig-border rounded-xl px-4 py-3 text-rig-text font-medium outline-none focus:border-rig-primary transition-colors"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-rig-muted block">Navbar Location</label>
+                    <input 
+                      value={generalSettings.navbarLocation ?? 'Karachi, Pakistan'}
+                      onChange={(e) => updateGeneralSetting('navbarLocation', e.target.value)}
+                      placeholder="Karachi, Pakistan"
+                      className="w-full bg-rig-surface border border-rig-border rounded-xl px-4 py-3 text-rig-text font-medium outline-none focus:border-rig-primary transition-colors"
+                    />
+                  </div>
                 </div>
               </div>
 
