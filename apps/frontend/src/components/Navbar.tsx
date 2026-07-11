@@ -222,6 +222,12 @@ export default function Navbar({ customLinks = [] }: { customLinks?: {label: str
                     <Link href="/category/cases" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-rig-muted hover:text-rig-text transition-colors">Cases</Link>
                     <Link href="/category/coolers" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-rig-muted hover:text-rig-text transition-colors">Coolers</Link>
                     <Link href="/category/monitors" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-rig-muted hover:text-rig-text transition-colors">Monitors</Link>
+                    <Link href="/category/laptops" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-rig-muted hover:text-rig-text transition-colors">Laptops</Link>
+                    <Link href="/category/desktops" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-rig-muted hover:text-rig-text transition-colors">Desktops</Link>
+                    <Link href="/category/headphones" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-rig-muted hover:text-rig-text transition-colors">Headphones</Link>
+                    <Link href="/category/mice" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-rig-muted hover:text-rig-text transition-colors">Mice</Link>
+                    <Link href="/category/keyboards" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-rig-muted hover:text-rig-text transition-colors">Keyboards</Link>
+                    <Link href="/category/peripherals" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-rig-muted hover:text-rig-text transition-colors">Peripherals</Link>
                   </div>
                 )}
               </div>
