@@ -202,7 +202,7 @@ export default function Navbar({ customLinks = [] }: { customLinks?: {label: str
                 </div>
               )}
 
-              <div className="flex flex-col pb-2">
+              <div className="flex flex-col pb-6 border-b border-rig-border">
                 <button 
                   onClick={() => setIsMobileCategoriesOpen(!isMobileCategoriesOpen)} 
                   className="flex items-center justify-between text-lg font-bold text-rig-text w-full text-left"
@@ -232,7 +232,7 @@ export default function Navbar({ customLinks = [] }: { customLinks?: {label: str
                 )}
               </div>
               
-              <Link href="/builder" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-bold text-rig-text mt-4 pt-4 border-t border-rig-border">PC Builder</Link>
+              <Link href="/builder" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-bold text-rig-text">PC Builder</Link>
               <Link href="/deals" onClick={() => setIsMobileMenuOpen(false)} className="text-xl font-black text-rig-primary hover:text-rose-400 transition-colors">
                 🔥 PC Deals
               </Link>
