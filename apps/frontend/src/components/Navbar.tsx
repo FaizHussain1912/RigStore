@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { ShoppingCart, User as UserIcon, Heart, LogOut, LayoutDashboard, Settings, Phone, MapPin, Sun, Moon, Menu, X } from 'lucide-react';
+import { ShoppingCart, User as UserIcon, Heart, LogOut, LayoutDashboard, Settings, Phone, MapPin, Sun, Moon, Menu, X, ChevronDown } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import MegaMenu from './MegaMenu';
 import { useCart } from '../app/CartContext';
@@ -16,6 +16,7 @@ export default function Navbar({ customLinks = [] }: { customLinks?: {label: str
   const { theme, setTheme } = useTheme();
   const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [isMobileCategoriesOpen, setIsMobileCategoriesOpen] = React.useState(false);
   
   const itemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const wishlistCount = wishlistItems.length;
@@ -201,15 +202,29 @@ export default function Navbar({ customLinks = [] }: { customLinks?: {label: str
                 </div>
               )}
 
-              <Link href="/category/processors" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-bold text-rig-text">Processors</Link>
-              <Link href="/category/motherboards" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-bold text-rig-text">Motherboards</Link>
-              <Link href="/category/gpus" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-bold text-rig-text">Graphic Cards</Link>
-              <Link href="/category/memory" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-bold text-rig-text">Memory (RAM)</Link>
-              <Link href="/category/storage" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-bold text-rig-text">Storage</Link>
-              <Link href="/category/psus" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-bold text-rig-text">Power Supplies</Link>
-              <Link href="/category/cases" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-bold text-rig-text">Cases</Link>
-              <Link href="/category/coolers" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-bold text-rig-text">Coolers</Link>
-              <Link href="/category/monitors" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-bold text-rig-text">Monitors</Link>
+              <div className="flex flex-col pb-2">
+                <button 
+                  onClick={() => setIsMobileCategoriesOpen(!isMobileCategoriesOpen)} 
+                  className="flex items-center justify-between text-lg font-bold text-rig-text w-full text-left"
+                >
+                  Categories
+                  <ChevronDown className={`w-5 h-5 transition-transform ${isMobileCategoriesOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {isMobileCategoriesOpen && (
+                  <div className="flex flex-col gap-4 mt-4 pl-4 border-l-2 border-rig-border">
+                    <Link href="/category/processors" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-rig-muted hover:text-rig-text transition-colors">Processors</Link>
+                    <Link href="/category/motherboards" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-rig-muted hover:text-rig-text transition-colors">Motherboards</Link>
+                    <Link href="/category/gpus" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-rig-muted hover:text-rig-text transition-colors">Graphic Cards</Link>
+                    <Link href="/category/memory" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-rig-muted hover:text-rig-text transition-colors">Memory (RAM)</Link>
+                    <Link href="/category/storage" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-rig-muted hover:text-rig-text transition-colors">Storage</Link>
+                    <Link href="/category/psus" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-rig-muted hover:text-rig-text transition-colors">Power Supplies</Link>
+                    <Link href="/category/cases" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-rig-muted hover:text-rig-text transition-colors">Cases</Link>
+                    <Link href="/category/coolers" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-rig-muted hover:text-rig-text transition-colors">Coolers</Link>
+                    <Link href="/category/monitors" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-rig-muted hover:text-rig-text transition-colors">Monitors</Link>
+                  </div>
+                )}
+              </div>
               
               <Link href="/builder" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-bold text-rig-text mt-4 pt-4 border-t border-rig-border">PC Builder</Link>
               <Link href="/deals" onClick={() => setIsMobileMenuOpen(false)} className="text-xl font-black text-rig-primary hover:text-rose-400 transition-colors">
