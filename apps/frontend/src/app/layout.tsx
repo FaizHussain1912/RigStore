@@ -30,7 +30,7 @@ export default async function RootLayout({
 }) {
   const settings = await prisma.storeSetting.findMany({
     where: { 
-      key: { in: ['PROMO_BANNER', 'HOMEPAGE_SIDEBAR', 'GENERAL_SETTINGS'] }
+      key: { in: ['PROMO_BANNER', 'HOMEPAGE_SIDEBAR', 'GENERAL_SETTINGS', 'FOOTER_SETTINGS'] }
     }
   });
   const settingsMap = settings.reduce((acc: Record<string, any>, s: any) => { acc[s.key] = s.value; return acc; }, {} as Record<string, any>);
@@ -39,6 +39,7 @@ export default async function RootLayout({
   const customNavbarLinks = Array.isArray(settingsMap['HOMEPAGE_SIDEBAR']) ? settingsMap['HOMEPAGE_SIDEBAR'] : [];
   const generalSettings = settingsMap['GENERAL_SETTINGS'] || {};
   const storeCurrency = generalSettings.currency || 'PKR';
+  const footerSettings = settingsMap['FOOTER_SETTINGS'] || {};
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -66,7 +67,7 @@ export default async function RootLayout({
                       <CartSidebar />
                       <WishlistSidebar />
                       {children}
-                      <Footer />
+                      <Footer settings={footerSettings} />
                     </TrackingProvider>
                   </CartProvider>
                 </WishlistProvider>

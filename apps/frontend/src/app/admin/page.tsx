@@ -1045,6 +1045,7 @@ export default function AdminDashboard() {
                 <div className="w-full md:w-64 bg-rig-background border-r border-rig-border p-4 flex flex-col gap-1">
                   {[
                     { id: 'HOMEPAGE_SIDEBAR', label: 'Navbar Links' },
+                    { id: 'FOOTER_SETTINGS', label: 'Footer Settings' },
                     { id: 'HOME_BANNER', label: 'Home Banner' },
                     { id: 'PROMO_BANNER', label: 'Promo Banner' },
                     { id: 'INSTAGRAM_FEED', label: 'Instagram Feed' },
@@ -1072,7 +1073,7 @@ export default function AdminDashboard() {
                 <div className="flex-1 p-8 overflow-y-auto">
                   <div className={['LIVE_TRACKING', 'GENERAL_SETTINGS'].includes(activeSettingsTab) ? 'w-full' : 'max-w-4xl'}>
                     <h2 className="text-2xl font-bold mb-6 text-rig-text border-b border-rig-border pb-4">
-                      {activeSettingsTab === 'HOMEPAGE_SIDEBAR' ? 'Navbar Links' : activeSettingsTab.replace('_', ' ')}
+                      {activeSettingsTab === 'HOMEPAGE_SIDEBAR' ? 'Navbar Links' : activeSettingsTab === 'FOOTER_SETTINGS' ? 'Footer Settings' : activeSettingsTab.replace('_', ' ')}
                     </h2>
                     
                     {activeSettingsTab === 'HOMEPAGE_SIDEBAR' && (() => {
@@ -1501,6 +1502,110 @@ export default function AdminDashboard() {
                           >
                             <Plus size={20} /> Add New Member
                           </button>
+                        </div>
+                      );
+                    })()}
+
+                    {activeSettingsTab === 'FOOTER_SETTINGS' && (() => {
+                      const footer = siteSettings?.FOOTER_SETTINGS || {};
+                      const productLinks = Array.isArray(footer.productLinks) ? footer.productLinks : [];
+                      
+                      const updateFooter = (field: string, value: any) => {
+                        updateSetting('FOOTER_SETTINGS', field, value);
+                      };
+
+                      const updateProductLink = (index: number, field: string, value: any) => {
+                        const newLinks = [...productLinks];
+                        if (!newLinks[index]) newLinks[index] = {};
+                        newLinks[index] = { ...newLinks[index], [field]: value };
+                        updateFooter('productLinks', newLinks);
+                      };
+
+                      const addProductLink = () => {
+                        updateFooter('productLinks', [...productLinks, { label: '', url: '' }]);
+                      };
+
+                      const removeProductLink = (index: number) => {
+                        const newLinks = [...productLinks];
+                        newLinks.splice(index, 1);
+                        updateFooter('productLinks', newLinks);
+                      };
+
+                      return (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                          <div className="space-y-4">
+                            <div>
+                              <label className="text-sm font-bold text-rig-muted mb-2 block">Description text</label>
+                              <textarea 
+                                value={footer.description || ''} 
+                                onChange={(e) => updateFooter('description', e.target.value)}
+                                placeholder="Welcome to RigStore..."
+                                className="w-full bg-rig-surface border border-rig-border rounded-xl px-4 py-3 text-rig-text font-medium outline-none focus:border-rig-primary transition-colors h-24 resize-none"
+                              />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-sm font-bold text-rig-muted mb-2 block">Address</label>
+                                <input 
+                                  value={footer.address || ''} 
+                                  onChange={(e) => updateFooter('address', e.target.value)}
+                                  className="w-full bg-rig-surface border border-rig-border rounded-xl px-4 py-3 text-rig-text font-medium outline-none focus:border-rig-primary transition-colors"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-sm font-bold text-rig-muted mb-2 block">Contact Number</label>
+                                <input 
+                                  value={footer.contactNumber || ''} 
+                                  onChange={(e) => updateFooter('contactNumber', e.target.value)}
+                                  className="w-full bg-rig-surface border border-rig-border rounded-xl px-4 py-3 text-rig-text font-medium outline-none focus:border-rig-primary transition-colors"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-sm font-bold text-rig-muted mb-2 block">Email</label>
+                                <input 
+                                  value={footer.email || ''} 
+                                  onChange={(e) => updateFooter('email', e.target.value)}
+                                  className="w-full bg-rig-surface border border-rig-border rounded-xl px-4 py-3 text-rig-text font-medium outline-none focus:border-rig-primary transition-colors"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div>
+                            <h3 className="text-lg font-bold mb-4 text-rig-text">Product Links Column</h3>
+                            <div className="space-y-3">
+                              {productLinks.map((link: any, idx: number) => (
+                                <div key={idx} className="flex gap-4 items-start bg-rig-background p-4 rounded-xl border border-rig-border">
+                                  <div className="flex-1 space-y-4">
+                                    <input 
+                                      placeholder="Label (e.g. Laptops)"
+                                      value={link.label || ''}
+                                      onChange={(e) => updateProductLink(idx, 'label', e.target.value)}
+                                      className="w-full bg-rig-surface border border-rig-border rounded-lg px-4 py-2 text-rig-text font-medium outline-none focus:border-rig-primary transition-colors"
+                                    />
+                                    <input 
+                                      placeholder="URL (e.g. /category/laptops)"
+                                      value={link.url || ''}
+                                      onChange={(e) => updateProductLink(idx, 'url', e.target.value)}
+                                      className="w-full bg-rig-surface border border-rig-border rounded-lg px-4 py-2 text-rig-text font-medium outline-none focus:border-rig-primary transition-colors text-sm"
+                                    />
+                                  </div>
+                                  <button 
+                                    onClick={() => removeProductLink(idx)}
+                                    className="p-3 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors border border-transparent hover:border-red-500/20"
+                                  >
+                                    <Trash2 size={20} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                            <button 
+                              onClick={addProductLink}
+                              className="mt-4 w-full border border-dashed border-rig-border hover:border-rig-primary text-rig-muted hover:text-rig-text bg-transparent hover:bg-rig-surface py-3 rounded-xl flex items-center justify-center gap-2 transition-colors font-medium"
+                            >
+                              <Plus size={20} /> Add Product Link
+                            </button>
+                          </div>
                         </div>
                       );
                     })()}

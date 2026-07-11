@@ -4,7 +4,22 @@ import React from 'react';
 import Link from 'next/link';
 import { MapPin, Phone, Mail, Facebook, Twitter, Instagram, Youtube, MessageCircle, ChevronUp } from 'lucide-react';
 
-export default function Footer() {
+export default function Footer({ settings }: { settings?: any }) {
+  const s = settings || {};
+  const desc = s.description || "Welcome to RigStore. Online computer hardware store in Pakistan. Buy Custom PCs, Processors, Graphic Cards, and Gaming accessories at the best prices in Pakistan.";
+  const address = s.address || "FL 4/20, Main Rashid Minhas Road, Gulshan-e-Iqbal Block-5, Karachi, Pakistan.";
+  const contact = s.contactNumber || "+92 316 2975195";
+  const email = s.email || "support@rigstore.pk";
+  const productLinks = Array.isArray(s.productLinks) && s.productLinks.length > 0 
+    ? s.productLinks 
+    : [
+        { label: "Laptops", url: "/category/laptops" },
+        { label: "Processors", url: "/category/processors" },
+        { label: "Graphic Cards", url: "/category/gpus" },
+        { label: "LCD/LED Monitors", url: "/category/monitors" },
+        { label: "Storage & SSDs", url: "/category/storage" },
+        { label: "Accessories", url: "/category/accessories" },
+      ];
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -17,21 +32,21 @@ export default function Footer() {
           {/* Column 1: Store Info */}
           <div className="space-y-6 lg:pr-8">
             <p className="text-rig-muted leading-relaxed">
-              Welcome to <span className="text-rig-text font-bold">RigStore</span>. Online computer hardware store in Pakistan. Buy Custom PCs, Processors, Graphic Cards, and Gaming accessories at the best prices in Pakistan.
+              {desc}
             </p>
             
             <div className="space-y-3">
               <div className="flex items-start gap-3 text-rig-muted">
                 <MapPin className="w-5 h-5 shrink-0 text-rig-primary" />
-                <span>FL 4/20, Main Rashid Minhas Road, Gulshan-e-Iqbal Block-5, Karachi, Pakistan.</span>
+                <span>{address}</span>
               </div>
               <div className="flex items-start gap-3 text-rig-muted">
                 <Phone className="w-5 h-5 shrink-0 text-rig-primary" />
-                <span>+92 316 2975195</span>
+                <span>{contact}</span>
               </div>
               <div className="flex items-start gap-3 text-rig-muted">
                 <Mail className="w-5 h-5 shrink-0 text-rig-primary" />
-                <span>support@rigstore.pk</span>
+                <span>{email}</span>
               </div>
             </div>
 
@@ -59,12 +74,9 @@ export default function Footer() {
           <div>
             <h3 className="text-rig-text font-bold text-lg mb-6 tracking-tight">Products</h3>
             <ul className="space-y-3">
-              <li><Link href="/category/laptops" className="text-rig-muted hover:text-rig-primary transition-colors">Laptops</Link></li>
-              <li><Link href="/category/processors" className="text-rig-muted hover:text-rig-primary transition-colors">Processors</Link></li>
-              <li><Link href="/category/gpus" className="text-rig-muted hover:text-rig-primary transition-colors">Graphic Cards</Link></li>
-              <li><Link href="/category/monitors" className="text-rig-muted hover:text-rig-primary transition-colors">LCD/LED Monitors</Link></li>
-              <li><Link href="/category/storage" className="text-rig-muted hover:text-rig-primary transition-colors">Storage & SSDs</Link></li>
-              <li><Link href="/category/accessories" className="text-rig-muted hover:text-rig-primary transition-colors">Accessories</Link></li>
+              {productLinks.map((link: any, idx: number) => (
+                <li key={idx}><Link href={link.url || '#'} className="text-rig-muted hover:text-rig-primary transition-colors">{link.label}</Link></li>
+              ))}
             </ul>
           </div>
 
