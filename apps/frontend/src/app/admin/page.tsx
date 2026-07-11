@@ -1508,7 +1508,21 @@ export default function AdminDashboard() {
 
                     {activeSettingsTab === 'FOOTER_SETTINGS' && (() => {
                       const footer = siteSettings?.FOOTER_SETTINGS || {};
-                      const productLinks = Array.isArray(footer.productLinks) ? footer.productLinks : [];
+                      const productLinks = Array.isArray(footer.productLinks) && footer.productLinks.length > 0
+                        ? footer.productLinks 
+                        : [
+                            { label: "Laptops", url: "/category/laptops" },
+                            { label: "Processors", url: "/category/processors" },
+                            { label: "Graphic Cards", url: "/category/gpus" },
+                            { label: "LCD/LED Monitors", url: "/category/monitors" },
+                            { label: "Storage & SSDs", url: "/category/storage" },
+                            { label: "Accessories", url: "/category/accessories" },
+                          ];
+                      
+                      const desc = footer.description ?? "Welcome to RigStore. Online computer hardware store in Pakistan. Buy Custom PCs, Processors, Graphic Cards, and Gaming accessories at the best prices in Pakistan.";
+                      const address = footer.address ?? "FL 4/20, Main Rashid Minhas Road, Gulshan-e-Iqbal Block-5, Karachi, Pakistan.";
+                      const contact = footer.contactNumber ?? "+92 316 2975195";
+                      const email = footer.email ?? "support@rigstore.pk";
                       
                       const updateFooter = (field: string, value: any) => {
                         updateSetting('FOOTER_SETTINGS', field, value);
@@ -1537,7 +1551,7 @@ export default function AdminDashboard() {
                             <div>
                               <label className="text-sm font-bold text-rig-muted mb-2 block">Description text</label>
                               <textarea 
-                                value={footer.description || ''} 
+                                value={desc} 
                                 onChange={(e) => updateFooter('description', e.target.value)}
                                 placeholder="Welcome to RigStore..."
                                 className="w-full bg-rig-surface border border-rig-border rounded-xl px-4 py-3 text-rig-text font-medium outline-none focus:border-rig-primary transition-colors h-24 resize-none"
@@ -1547,7 +1561,7 @@ export default function AdminDashboard() {
                               <div>
                                 <label className="text-sm font-bold text-rig-muted mb-2 block">Address</label>
                                 <input 
-                                  value={footer.address || ''} 
+                                  value={address} 
                                   onChange={(e) => updateFooter('address', e.target.value)}
                                   className="w-full bg-rig-surface border border-rig-border rounded-xl px-4 py-3 text-rig-text font-medium outline-none focus:border-rig-primary transition-colors"
                                 />
@@ -1555,7 +1569,7 @@ export default function AdminDashboard() {
                               <div>
                                 <label className="text-sm font-bold text-rig-muted mb-2 block">Contact Number</label>
                                 <input 
-                                  value={footer.contactNumber || ''} 
+                                  value={contact} 
                                   onChange={(e) => updateFooter('contactNumber', e.target.value)}
                                   className="w-full bg-rig-surface border border-rig-border rounded-xl px-4 py-3 text-rig-text font-medium outline-none focus:border-rig-primary transition-colors"
                                 />
@@ -1563,7 +1577,7 @@ export default function AdminDashboard() {
                               <div>
                                 <label className="text-sm font-bold text-rig-muted mb-2 block">Email</label>
                                 <input 
-                                  value={footer.email || ''} 
+                                  value={email} 
                                   onChange={(e) => updateFooter('email', e.target.value)}
                                   className="w-full bg-rig-surface border border-rig-border rounded-xl px-4 py-3 text-rig-text font-medium outline-none focus:border-rig-primary transition-colors"
                                 />
