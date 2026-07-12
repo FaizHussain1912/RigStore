@@ -311,4 +311,52 @@ router.put('/settings', async (req: AuthRequest, res) => {
   }
 });
 
+// Update User Name
+router.put('/users/:id', async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+    const { name } = req.body;
+    
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+
+    const user = await prisma.user.update({
+      where: { id },
+      data: { name },
+      select: { id: true, name: true, email: true, role: true }
+    });
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update user' });
+  }
+});
+
+// Delete User Account
+router.delete('/users/:id', async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (id === req.user?.userId) {
+       return res.status(400).json({ error: 'Cannot delete your own admin account from here' });
+    }
+
+    const userOrders = await prisma.order.findMany({ where: { userId: id } });
+    const orderIds = userOrders.map((o: any) => o.id);
+    
+    if (orderIds.length > 0) {
+      await prisma.orderItem.deleteMany({ where: { orderId: { in: orderIds } } });
+      await prisma.order.deleteMany({ where: { userId: id } });
+    }
+
+    await prisma.user.delete({ where: { id } });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ error: 'Failed to delete user account' });
+  }
+});
+
 export default router;
