@@ -18,10 +18,13 @@ export default function CheckoutClient({ shippingRate = 0 }: { shippingRate?: nu
     email: user?.email || '',
     phone: '',
     address: '',
+    area: '',
     city: '',
     zipCode: '',
     country: 'Pakistan'
   });
+  
+  const [deliveryAreasSettings, setDeliveryAreasSettings] = useState<any[]>([]);
   
   const [paymentMethod, setPaymentMethod] = useState('COD'); // COD, JAZZCASH, NAYAPAY
   const [step, setStep] = useState<'DETAILS' | 'REVIEW'>('DETAILS');
@@ -37,6 +40,17 @@ export default function CheckoutClient({ shippingRate = 0 }: { shippingRate?: nu
       router.push('/login');
     }
   }, [user, router]);
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6767'}/api/settings/public`)
+      .then(res => res.json())
+      .then(data => {
+         if (data.DELIVERY_AREAS_SETTINGS) {
+           setDeliveryAreasSettings(data.DELIVERY_AREAS_SETTINGS);
+         }
+      })
+      .catch(console.error);
+  }, []);
 
   if (!user) {
     return null;
@@ -149,14 +163,47 @@ export default function CheckoutClient({ shippingRate = 0 }: { shippingRate?: nu
                   <input required type="tel" className="w-full bg-rig-background border border-rig-border rounded-lg px-4 py-2.5 text-rig-text focus:outline-none focus:border-rig-primary transition-colors" value={shippingAddress.phone} onChange={(e) => setShippingAddress({...shippingAddress, phone: e.target.value})} placeholder="0300 1234567" />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-rig-muted mb-1">Street Address</label>
-                  <input required type="text" className="w-full bg-rig-background border border-rig-border rounded-lg px-4 py-2.5 text-rig-text focus:outline-none focus:border-rig-primary transition-colors" value={shippingAddress.address} onChange={(e) => setShippingAddress({...shippingAddress, address: e.target.value})} placeholder="House No, Street Area" />
-                </div>
-                <div>
                   <label className="block text-sm font-medium text-rig-muted mb-1">City</label>
-                  <input required type="text" className="w-full bg-rig-background border border-rig-border rounded-lg px-4 py-2.5 text-rig-text focus:outline-none focus:border-rig-primary transition-colors" value={shippingAddress.city} onChange={(e) => setShippingAddress({...shippingAddress, city: e.target.value})} placeholder="Karachi" />
+                  {deliveryAreasSettings.length > 0 ? (
+                    <select 
+                      required 
+                      className="w-full bg-rig-background border border-rig-border rounded-lg px-4 py-2.5 text-rig-text focus:outline-none focus:border-rig-primary transition-colors cursor-pointer appearance-none" 
+                      value={shippingAddress.city} 
+                      onChange={(e) => setShippingAddress({...shippingAddress, city: e.target.value, area: ''})}
+                    >
+                      <option value="" disabled>Select a City</option>
+                      {deliveryAreasSettings.map((c, i) => (
+                        <option key={i} value={c.city}>{c.city}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input required type="text" className="w-full bg-rig-background border border-rig-border rounded-lg px-4 py-2.5 text-rig-text focus:outline-none focus:border-rig-primary transition-colors" value={shippingAddress.city} onChange={(e) => setShippingAddress({...shippingAddress, city: e.target.value})} placeholder="Karachi" />
+                  )}
                 </div>
-                <div>
+                
+                {shippingAddress.city && deliveryAreasSettings.find(c => c.city === shippingAddress.city)?.areas?.length > 0 && (
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-rig-muted mb-1">Select Area / Location *</label>
+                    <select 
+                      required 
+                      className="w-full bg-rig-background border border-rig-border rounded-lg px-4 py-2.5 text-rig-text focus:outline-none focus:border-rig-primary transition-colors cursor-pointer appearance-none" 
+                      value={shippingAddress.area} 
+                      onChange={(e) => setShippingAddress({...shippingAddress, area: e.target.value})}
+                    >
+                      <option value="" disabled>Select your Area</option>
+                      {deliveryAreasSettings.find(c => c.city === shippingAddress.city)?.areas.map((area: string, i: number) => (
+                        <option key={i} value={area}>{area}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-rig-muted mb-1">Street Address</label>
+                  <input required type="text" className="w-full bg-rig-background border border-rig-border rounded-lg px-4 py-2.5 text-rig-text focus:outline-none focus:border-rig-primary transition-colors" value={shippingAddress.address} onChange={(e) => setShippingAddress({...shippingAddress, address: e.target.value})} placeholder="House No, Street Details" />
+                </div>
+                
+                <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-rig-muted mb-1">ZIP Code</label>
                   <input required type="text" className="w-full bg-rig-background border border-rig-border rounded-lg px-4 py-2.5 text-rig-text focus:outline-none focus:border-rig-primary transition-colors" value={shippingAddress.zipCode} onChange={(e) => setShippingAddress({...shippingAddress, zipCode: e.target.value})} placeholder="74200" />
                 </div>
@@ -229,7 +276,7 @@ export default function CheckoutClient({ shippingRate = 0 }: { shippingRate?: nu
                   <div className="space-y-3">
                     <h3 className="text-xs font-bold text-rig-muted uppercase tracking-wider mb-2">Shipping Address</h3>
                     <p className="text-rig-text leading-relaxed">{shippingAddress.address}</p>
-                    <p className="text-rig-muted">{shippingAddress.city}, {shippingAddress.zipCode}</p>
+                    <p className="text-rig-muted">{shippingAddress.area && `${shippingAddress.area}, `}{shippingAddress.city}, {shippingAddress.zipCode}</p>
                     <p className="text-rig-muted">{shippingAddress.country}</p>
                   </div>
                   <div className="md:col-span-2 pt-6 border-t border-rig-border/50">

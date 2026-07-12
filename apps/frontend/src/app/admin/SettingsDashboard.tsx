@@ -35,6 +35,37 @@ export default function SettingsDashboard({ siteSettings, updateSetting, handleS
     updateSetting('AI_CHATBOT_SETTINGS', field, value);
   };
 
+  const deliveryAreas = siteSettings?.DELIVERY_AREAS_SETTINGS || [];
+  
+  const handleAddCity = () => {
+    const newCity = prompt('Enter city name (e.g. Karachi):');
+    if (newCity) {
+      updateSetting('DELIVERY_AREAS_SETTINGS', '', [...deliveryAreas, { city: newCity, areas: [] }]);
+    }
+  };
+
+  const handleRemoveCity = (cityIndex: number) => {
+    if (confirm('Are you sure you want to remove this city?')) {
+      const updated = deliveryAreas.filter((_: any, i: number) => i !== cityIndex);
+      updateSetting('DELIVERY_AREAS_SETTINGS', '', updated);
+    }
+  };
+
+  const handleAddArea = (cityIndex: number) => {
+    const newArea = prompt('Enter area name (e.g. Clifton):');
+    if (newArea) {
+      const updated = [...deliveryAreas];
+      updated[cityIndex].areas.push(newArea);
+      updateSetting('DELIVERY_AREAS_SETTINGS', '', updated);
+    }
+  };
+
+  const handleRemoveArea = (cityIndex: number, areaIndex: number) => {
+    const updated = [...deliveryAreas];
+    updated[cityIndex].areas = updated[cityIndex].areas.filter((_: any, i: number) => i !== areaIndex);
+    updateSetting('DELIVERY_AREAS_SETTINGS', '', updated);
+  };
+
   return (
     <div className="w-full bg-rig-surface text-rig-text rounded-2xl flex flex-col md:flex-row font-sans min-h-[700px]">
       
@@ -205,6 +236,54 @@ export default function SettingsDashboard({ siteSettings, updateSetting, handleS
                  </div>
 
                </div>
+            </div>
+          ) : activeTab === 'Delivery Areas' ? (
+            <div className="bg-rig-background border border-rig-border rounded-2xl p-4 sm:p-8 shadow-sm">
+               <div className="flex items-center justify-between mb-6 border-b border-rig-border pb-4">
+                 <h3 className="text-lg font-bold text-rig-text">Delivery Areas</h3>
+                 <button onClick={handleAddCity} className="bg-rig-primary px-4 py-2 rounded-lg text-white font-bold text-sm hover:bg-rig-primary/90 transition-colors">
+                   + Add City
+                 </button>
+               </div>
+               
+               {deliveryAreas.length === 0 ? (
+                 <div className="text-center text-rig-muted py-8">
+                   No cities added yet. Add a city to start configuring delivery areas.
+                 </div>
+               ) : (
+                 <div className="space-y-6">
+                   {deliveryAreas.map((cityObj: any, cityIndex: number) => (
+                     <div key={cityIndex} className="bg-rig-surface border border-rig-border rounded-xl p-4">
+                       <div className="flex items-center justify-between mb-4">
+                         <h4 className="font-bold text-lg text-rig-text flex items-center gap-2">
+                           <MapPin size={18} className="text-rig-primary" /> {cityObj.city}
+                         </h4>
+                         <div className="flex gap-2">
+                           <button onClick={() => handleAddArea(cityIndex)} className="text-xs bg-rig-background border border-rig-border px-3 py-1.5 rounded-lg text-rig-text hover:bg-rig-border/50">
+                             + Add Area
+                           </button>
+                           <button onClick={() => handleRemoveCity(cityIndex)} className="text-xs bg-red-500/10 text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-500/20">
+                             Remove
+                           </button>
+                         </div>
+                       </div>
+                       
+                       <div className="flex flex-wrap gap-2">
+                         {cityObj.areas && cityObj.areas.length > 0 ? (
+                           cityObj.areas.map((area: string, areaIndex: number) => (
+                             <div key={areaIndex} className="bg-rig-background border border-rig-border px-3 py-1.5 rounded-full text-sm flex items-center gap-2">
+                               <span className="text-rig-muted">{area}</span>
+                               <button onClick={() => handleRemoveArea(cityIndex, areaIndex)} className="text-red-500 hover:text-red-400 font-bold ml-1">×</button>
+                             </div>
+                           ))
+                         ) : (
+                           <div className="text-sm text-rig-muted italic">No areas added for {cityObj.city}.</div>
+                         )}
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+               )}
             </div>
           ) : (
             <div className="bg-rig-background border border-rig-border rounded-2xl p-12 shadow-sm text-center">

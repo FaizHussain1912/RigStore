@@ -86,6 +86,27 @@ app.use('/api/wishlist', wishlistRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/admin', adminRouter);
 
+// --- PUBLIC SETTINGS API ---
+app.get('/api/settings/public', async (req, res) => {
+  try {
+    const settings = await prisma.storeSetting.findMany({
+      where: {
+        key: {
+          in: ['GENERAL_SETTINGS', 'DELIVERY_AREAS_SETTINGS'] // Extend as needed
+        }
+      }
+    });
+    const settingsMap: Record<string, any> = {};
+    settings.forEach(s => {
+      settingsMap[s.key] = s.value;
+    });
+    res.json(settingsMap);
+  } catch (error) {
+    console.error("Error fetching public settings:", error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // --- CATALOG API ---
 app.get('/api/products', async (req, res) => {
   try {
