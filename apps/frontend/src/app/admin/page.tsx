@@ -145,6 +145,13 @@ export default function AdminDashboard() {
   };
 
   const updateSetting = (key: string, field: string, value: any) => {
+    if (field === '') {
+      setSiteSettings((prev: any) => ({
+        ...prev,
+        [key]: value
+      }));
+      return;
+    }
     setSiteSettings((prev: any) => ({
       ...prev,
       [key]: {
