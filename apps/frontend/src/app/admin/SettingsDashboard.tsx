@@ -134,6 +134,23 @@ export default function SettingsDashboard({ siteSettings, updateSetting, handleS
 
 
             </div>
+          ) : activeTab === 'Shipping & Delivery' ? (
+             <div className="bg-rig-background border border-rig-border rounded-2xl p-4 sm:p-8 shadow-sm">
+                <h3 className="text-lg font-bold text-rig-text mb-6 border-b border-rig-border pb-2">Shipping Configuration</h3>
+                <div className="space-y-6 max-w-xl">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-rig-muted block">Flat Shipping Rate</label>
+                    <input 
+                      type="number"
+                      value={generalSettings.shippingRate || 0}
+                      onChange={(e) => updateGeneralSetting('shippingRate', parseInt(e.target.value) || 0)}
+                      placeholder="e.g. 500"
+                      className="w-full bg-rig-surface border border-rig-border rounded-xl px-4 py-3 text-rig-text font-medium outline-none focus:border-rig-primary transition-colors"
+                    />
+                    <p className="text-xs text-rig-muted mt-1">This flat rate will be added to the customer's total at checkout.</p>
+                  </div>
+                </div>
+             </div>
           ) : (
             <div className="bg-rig-background border border-rig-border rounded-2xl p-12 shadow-sm text-center">
               <div className="w-16 h-16 bg-rig-surface rounded-2xl flex items-center justify-center mx-auto mb-4 text-rig-muted border border-rig-border">

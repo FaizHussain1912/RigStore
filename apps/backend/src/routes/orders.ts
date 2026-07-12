@@ -40,10 +40,18 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
       return res.status(400).json({ error: 'Cart is empty' });
     }
 
+    const settings = await prisma.storeSetting.findUnique({ where: { key: 'GENERAL_SETTINGS' } });
+    let shippingRate = 0;
+    if (settings && settings.value) {
+      const val = settings.value as Record<string, any>;
+      shippingRate = val.shippingRate ? parseInt(val.shippingRate) : 0;
+    }
+
     // Calculate total
-    const totalAmount = cart.items.reduce((sum, item) => {
+    const itemsTotal = cart.items.reduce((sum, item) => {
       return sum + (item.product.basePrice * item.quantity);
     }, 0);
+    const totalAmount = itemsTotal + shippingRate;
 
     // Format full address
     const fullAddress = shippingAddress 
