@@ -74,56 +74,66 @@ export default function HeroSlider({ banners }: { banners: BannerData[] }) {
         <Zap size={600} />
       </div>
 
-      <div className="container-dense relative z-10 flex flex-col md:flex-row items-center gap-8 justify-between">
+      <div className="container-dense relative z-10 overflow-hidden">
         
         {activeBanners.length > 1 && (
-          <button 
-            onClick={() => prevSlide(true)}
-            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-20 bg-rig-background/80 hover:bg-rig-primary border border-rig-border hover:border-rig-primary text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300"
-          >
-            <ChevronLeft size={24} />
-          </button>
+          <>
+            <button 
+              onClick={() => prevSlide(true)}
+              className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-rig-background/80 hover:bg-rig-primary border border-rig-border hover:border-rig-primary text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <button 
+              onClick={() => nextSlide(true)}
+              className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-rig-background/80 hover:bg-rig-primary border border-rig-border hover:border-rig-primary text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300"
+            >
+              <ChevronRight size={24} />
+            </button>
+          </>
         )}
 
-        <div key={currentIndex} className="flex flex-col items-start gap-4 max-w-2xl animate-in fade-in slide-in-from-right-8 duration-500 fill-mode-both">
-          <div className="bg-rig-primary/20 text-rig-primary border border-rig-primary/30 px-3 py-1 text-xs font-bold uppercase tracking-widest rounded-sm flex items-center gap-2">
-            <ShieldAlert size={14} /> {currentBanner.tagline}
-          </div>
-          <h1 className="text-4xl md:text-6xl font-bold text-rig-text tracking-tighter leading-tight">
-            {currentBanner.title1} <br/><span className="text-rig-primary">{currentBanner.title2}</span>
-          </h1>
-          <p className="text-rig-muted text-lg mt-2 font-medium">
-            {currentBanner.description}
-          </p>
-          
-          <div className="flex items-center gap-4 mt-4">
-            <Link href={currentBanner.buttonLink || '#'} className="bg-rig-primary hover:bg-red-600 text-white font-bold py-3 px-8 transition-colors flex items-center gap-2">
-              {currentBanner.buttonText || 'Add to Cart'} <ChevronRight size={18} />
-            </Link>
-            <div className="flex flex-col text-sm">
-              <span className="text-rig-text font-bold text-xl">{currentBanner.priceText}</span>
-              <span className="text-rig-muted font-mono text-[11px]">{currentBanner.skuText}</span>
+        {/* Sliding Track */}
+        <div 
+          className="flex transition-transform duration-700 ease-in-out"
+          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        >
+          {activeBanners.map((banner, idx) => (
+            <div key={idx} className="w-full flex-shrink-0 flex flex-col md:flex-row items-center gap-8 justify-between px-1">
+              
+              <div className="flex flex-col items-start gap-4 max-w-2xl">
+                <div className="bg-rig-primary/20 text-rig-primary border border-rig-primary/30 px-3 py-1 text-xs font-bold uppercase tracking-widest rounded-sm flex items-center gap-2">
+                  <ShieldAlert size={14} /> {banner.tagline}
+                </div>
+                <h1 className="text-4xl md:text-6xl font-bold text-rig-text tracking-tighter leading-tight">
+                  {banner.title1} <br/><span className="text-rig-primary">{banner.title2}</span>
+                </h1>
+                <p className="text-rig-muted text-lg mt-2 font-medium">
+                  {banner.description}
+                </p>
+                
+                <div className="flex items-center gap-4 mt-4">
+                  <Link href={banner.buttonLink || '#'} className="bg-rig-primary hover:bg-red-600 text-white font-bold py-3 px-8 transition-colors flex items-center gap-2">
+                    {banner.buttonText || 'Add to Cart'} <ChevronRight size={18} />
+                  </Link>
+                  <div className="flex flex-col text-sm">
+                    <span className="text-rig-text font-bold text-xl">{banner.priceText}</span>
+                    <span className="text-rig-muted font-mono text-[11px]">{banner.skuText}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="hidden lg:block w-96 h-64 bg-rig-surface border border-rig-border shadow-2xl relative rounded-md p-4">
+                <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,70,85,0.05)_50%,transparent_75%)] bg-[length:250%_250%] animate-pulse"></div>
+                {/* Placeholder for Product Image */}
+                <div className="w-full h-full flex items-center justify-center text-rig-muted font-mono text-sm border border-dashed border-rig-border/50">
+                  [ Render Image {idx + 1} ]
+                </div>
+              </div>
+
             </div>
-          </div>
+          ))}
         </div>
-        
-        <div key={`img-${currentIndex}`} className="hidden lg:block w-96 h-64 bg-rig-surface border border-rig-border shadow-2xl relative rounded-md p-4 animate-in fade-in zoom-in-95 duration-500 fill-mode-both">
-          <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,70,85,0.05)_50%,transparent_75%)] bg-[length:250%_250%] animate-pulse"></div>
-          {/* Placeholder for Product Image */}
-          <div className="w-full h-full flex items-center justify-center text-rig-muted font-mono text-sm border border-dashed border-rig-border/50">
-            [ Render Image {currentIndex + 1} ]
-          </div>
-        </div>
-
-        {activeBanners.length > 1 && (
-          <button 
-            onClick={() => nextSlide(true)}
-            className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-20 bg-rig-background/80 hover:bg-rig-primary border border-rig-border hover:border-rig-primary text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300"
-          >
-            <ChevronRight size={24} />
-          </button>
-        )}
-
       </div>
       
       {/* Navigation Dots */}
