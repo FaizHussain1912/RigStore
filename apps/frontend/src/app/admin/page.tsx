@@ -1729,15 +1729,22 @@ export default function AdminDashboard() {
                     <p className="text-rig-muted mb-1"><strong className="text-rig-text">Email:</strong> {viewOrderDetails.user.email}</p>
                     <p className="text-rig-muted"><strong className="text-rig-text">Phone:</strong> {viewOrderDetails.phone || 'N/A'}</p>
                   </div>
-                  <div className="bg-rig-background rounded-xl p-4 border border-rig-border">
+                  <div className="bg-rig-background rounded-xl p-4 border border-rig-border flex flex-col">
                     <h4 className="font-bold text-rig-text mb-2 tracking-wider uppercase text-xs">Order Summary</h4>
                     <p className="text-rig-muted mb-1"><strong className="text-rig-text">Date:</strong> {format(new Date(viewOrderDetails.createdAt), 'MMM dd, yyyy')}</p>
                     <p className="text-rig-muted mb-1"><strong className="text-rig-text">Status:</strong> {viewOrderDetails.status}</p>
-                    <div className="border-t border-rig-border/50 pt-4 flex justify-between items-center text-lg">
+                    <div className="border-t border-rig-border/50 mt-auto pt-4 flex justify-between items-center text-lg">
                       <p className="text-rig-muted"><strong className="text-rig-text">Total:</strong> {formatPrice(viewOrderDetails.totalAmount)}</p>
                     </div>
                   </div>
                 </div>
+                
+                {viewOrderDetails.cancelRequested && viewOrderDetails.status !== 'CANCELLED' && (
+                  <div className="bg-red-500/10 rounded-xl p-4 border border-red-500/20">
+                    <h4 className="font-bold text-red-500 mb-2 tracking-wider uppercase text-xs">Cancellation Requested</h4>
+                    <p className="text-red-400/90 text-sm italic">"{viewOrderDetails.cancelReason || 'No reason provided by the customer.'}"</p>
+                  </div>
+                )}
               </div>
 
               <div className="mt-6 flex justify-end">
