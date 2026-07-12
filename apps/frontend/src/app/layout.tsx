@@ -9,6 +9,7 @@ import CartSidebar from '../components/CartSidebar';
 import WishlistSidebar from '../components/WishlistSidebar';
 import TrackingProvider from './TrackingProvider';
 import Footer from '../components/Footer';
+import Chatbot from '@/components/Chatbot';
 import { ThemeProvider } from '../components/ThemeProvider';
 import { PrismaClient } from '@rigstore/database';
 import { CurrencyProvider } from './CurrencyContext';
@@ -30,7 +31,7 @@ export default async function RootLayout({
 }) {
   const settings = await prisma.storeSetting.findMany({
     where: { 
-      key: { in: ['PROMO_BANNER', 'HOMEPAGE_SIDEBAR', 'GENERAL_SETTINGS', 'FOOTER_SETTINGS'] }
+      key: { in: ['PROMO_BANNER', 'HOMEPAGE_SIDEBAR', 'GENERAL_SETTINGS', 'FOOTER_SETTINGS', 'AI_CHATBOT_SETTINGS'] }
     }
   });
   const settingsMap = settings.reduce((acc: Record<string, any>, s: any) => { acc[s.key] = s.value; return acc; }, {} as Record<string, any>);
@@ -40,6 +41,7 @@ export default async function RootLayout({
   const generalSettings = settingsMap['GENERAL_SETTINGS'] || {};
   const storeCurrency = generalSettings.currency || 'PKR';
   const footerSettings = settingsMap['FOOTER_SETTINGS'] || {};
+  const aiSettings = settingsMap['AI_CHATBOT_SETTINGS'] || {};
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -68,6 +70,7 @@ export default async function RootLayout({
                       <WishlistSidebar />
                       {children}
                       <Footer settings={footerSettings} />
+                      <Chatbot settings={aiSettings} />
                     </TrackingProvider>
                   </CartProvider>
                 </WishlistProvider>

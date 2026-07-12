@@ -30,6 +30,11 @@ export default function SettingsDashboard({ siteSettings, updateSetting, handleS
     updateSetting('GENERAL_SETTINGS', field, value);
   };
 
+  const aiSettings = siteSettings?.AI_CHATBOT_SETTINGS || {};
+  const updateAiSetting = (field: string, value: any) => {
+    updateSetting('AI_CHATBOT_SETTINGS', field, value);
+  };
+
   return (
     <div className="w-full bg-rig-surface text-rig-text rounded-2xl flex flex-col md:flex-row font-sans min-h-[700px]">
       
@@ -151,6 +156,56 @@ export default function SettingsDashboard({ siteSettings, updateSetting, handleS
                   </div>
                 </div>
              </div>
+          ) : activeTab === 'AI Chatbot' ? (
+            <div className="bg-rig-background border border-rig-border rounded-2xl p-4 sm:p-8 shadow-sm">
+               <h3 className="text-lg font-bold text-rig-text mb-6 border-b border-rig-border pb-2">AI Chatbot Configuration</h3>
+               <div className="space-y-6 max-w-xl">
+                 
+                 <div className="flex items-center justify-between p-4 bg-rig-surface border border-rig-border rounded-xl">
+                   <div>
+                     <div className="font-bold text-rig-text">Enable AI Chatbot</div>
+                     <div className="text-sm text-rig-muted">Show the floating chat widget on the website.</div>
+                   </div>
+                   <label className="relative inline-flex items-center cursor-pointer">
+                     <input type="checkbox" className="sr-only peer" checked={aiSettings.enabled || false} onChange={(e) => updateAiSetting('enabled', e.target.checked)} />
+                     <div className="w-11 h-6 bg-rig-background peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rig-primary"></div>
+                   </label>
+                 </div>
+
+                 <div className="space-y-2">
+                   <label className="text-sm font-bold text-rig-muted block">Gemini API Key</label>
+                   <input 
+                     type="password"
+                     value={aiSettings.apiKey || ''}
+                     onChange={(e) => updateAiSetting('apiKey', e.target.value)}
+                     placeholder="AIzaSy..."
+                     className="w-full bg-rig-surface border border-rig-border rounded-xl px-4 py-3 text-rig-text font-medium outline-none focus:border-rig-primary transition-colors"
+                   />
+                   <p className="text-xs text-rig-muted mt-1">Get your free API key from Google AI Studio.</p>
+                 </div>
+
+                 <div className="space-y-2">
+                   <label className="text-sm font-bold text-rig-muted block">Bot Name</label>
+                   <input 
+                     type="text"
+                     value={aiSettings.botName || 'RigBot'}
+                     onChange={(e) => updateAiSetting('botName', e.target.value)}
+                     placeholder="e.g. RigBot"
+                     className="w-full bg-rig-surface border border-rig-border rounded-xl px-4 py-3 text-rig-text font-medium outline-none focus:border-rig-primary transition-colors"
+                   />
+                 </div>
+
+                 <div className="space-y-2">
+                   <label className="text-sm font-bold text-rig-muted block">Welcome Message</label>
+                   <textarea 
+                     value={aiSettings.welcomeMessage || 'Hi there! I am your AI assistant. How can I help you today?'}
+                     onChange={(e) => updateAiSetting('welcomeMessage', e.target.value)}
+                     className="w-full bg-rig-surface border border-rig-border rounded-xl px-4 py-3 text-rig-text font-medium outline-none focus:border-rig-primary transition-colors h-24 resize-none"
+                   />
+                 </div>
+
+               </div>
+            </div>
           ) : (
             <div className="bg-rig-background border border-rig-border rounded-2xl p-12 shadow-sm text-center">
               <div className="w-16 h-16 bg-rig-surface rounded-2xl flex items-center justify-center mx-auto mb-4 text-rig-muted border border-rig-border">

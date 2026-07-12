@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@rigstore/database": "*",
     "@rigstore/shared-utils": "*",
     "date-fns": "^4.4.0",
