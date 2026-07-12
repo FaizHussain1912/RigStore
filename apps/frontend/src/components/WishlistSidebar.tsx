@@ -6,6 +6,7 @@ import { useCart } from '../app/CartContext';
 import { X, Heart, Trash2, ShoppingCart } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCurrency } from '../app/CurrencyContext';
+import Link from 'next/link';
 
 export default function WishlistSidebar() {
   const { wishlistItems, isWishlistOpen, setIsWishlistOpen, removeFromWishlist } = useWishlist();
@@ -38,11 +39,13 @@ export default function WishlistSidebar() {
           ) : (
             wishlistItems.map((item) => (
               <div key={item.id} className="flex gap-4 items-center bg-rig-background p-3 rounded-lg border border-rig-border">
-                <div className="w-16 h-16 bg-white/5 rounded flex items-center justify-center p-1">
+                <Link href={`/product/${item.product.slug}`} onClick={() => setIsWishlistOpen(false)} className="w-16 h-16 bg-white/5 rounded flex items-center justify-center p-1 hover:opacity-80 transition-opacity">
                   <img src={item.product.imageUrl || '/images/gpu.png'} alt={item.product.name} className="w-full h-full object-contain" />
-                </div>
+                </Link>
                 <div className="flex-1">
-                  <h4 className="text-sm font-semibold leading-tight mb-1 line-clamp-2">{item.product.name}</h4>
+                  <Link href={`/product/${item.product.slug}`} onClick={() => setIsWishlistOpen(false)}>
+                    <h4 className="text-sm font-semibold leading-tight mb-1 line-clamp-2 hover:text-rig-primary transition-colors">{item.product.name}</h4>
+                  </Link>
                   <div className="text-rig-primary font-bold text-sm">{formatPrice(item.product.basePrice)}</div>
                   <button 
                     onClick={() => {

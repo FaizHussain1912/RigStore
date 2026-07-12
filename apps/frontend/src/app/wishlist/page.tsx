@@ -109,21 +109,23 @@ export default function WishlistPage() {
                 <Trash2 className="w-4 h-4" />
               </button>
               
-              <div className="aspect-square relative mb-4 rounded-lg overflow-hidden bg-rig-surface">
+              <Link href={`/product/${item.product.slug}`} className="block aspect-square relative mb-4 rounded-lg overflow-hidden bg-rig-surface">
                 <img 
                   src={item.product.imageUrl || '/images/gpu.png'} 
                   alt={item.product.name} 
                   className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
                 />
-              </div>
+              </Link>
               
               <div className="flex flex-col flex-grow">
                 <div className="text-xs font-semibold text-rig-primary tracking-wider uppercase mb-1">
                   {item.product.brand}
                 </div>
-                <h3 className="text-lg font-bold text-rig-text mb-2 line-clamp-2">
-                  {item.product.name}
-                </h3>
+                <Link href={`/product/${item.product.slug}`}>
+                  <h3 className="text-lg font-bold text-rig-text mb-2 line-clamp-2 hover:text-rig-primary transition-colors">
+                    {item.product.name}
+                  </h3>
+                </Link>
                 <div className="mt-auto">
                   <div className="text-2xl font-bold text-rig-secondary mb-4">
                     Rs. {item.product.basePrice.toLocaleString()}

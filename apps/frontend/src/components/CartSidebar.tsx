@@ -6,6 +6,8 @@ import { X, ShoppingCart, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCurrency } from '../app/CurrencyContext';
 
+import Link from 'next/link';
+
 export default function CartSidebar() {
   const { cart, isCartOpen, setIsCartOpen, removeFromCart } = useCart();
   const { formatPrice } = useCurrency();
@@ -38,11 +40,13 @@ export default function CartSidebar() {
           ) : (
             cart.map((item) => (
               <div key={item.id} className="flex gap-4 items-center bg-rig-background p-3 rounded-lg border border-rig-border">
-                <div className="w-16 h-16 bg-white/5 rounded flex items-center justify-center text-xs text-rig-muted uppercase font-bold">
+                <Link href={`/product/${item.slug}`} onClick={() => setIsCartOpen(false)} className="w-16 h-16 bg-white/5 rounded flex items-center justify-center text-xs text-rig-muted uppercase font-bold hover:opacity-80 transition-opacity">
                   {item.brand}
-                </div>
+                </Link>
                 <div className="flex-1">
-                  <h4 className="text-sm font-semibold leading-tight mb-1">{item.name}</h4>
+                  <Link href={`/product/${item.slug}`} onClick={() => setIsCartOpen(false)}>
+                    <h4 className="text-sm font-semibold leading-tight mb-1 hover:text-rig-primary transition-colors">{item.name}</h4>
+                  </Link>
                   
                   {item.specs && Object.keys(item.specs).length > 0 && (
                     <div className="text-[10px] text-rig-muted mb-2 leading-tight">
