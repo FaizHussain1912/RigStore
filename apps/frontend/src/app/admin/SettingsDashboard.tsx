@@ -10,6 +10,10 @@ interface SettingsDashboardProps {
 
 export default function SettingsDashboard({ siteSettings, updateSetting, handleSaveSettings, savingSettings }: SettingsDashboardProps) {
   const [activeTab, setActiveTab] = useState('General');
+  const [isAddingCity, setIsAddingCity] = useState(false);
+  const [newCityName, setNewCityName] = useState('');
+  const [addingAreaToCityIndex, setAddingAreaToCityIndex] = useState<number | null>(null);
+  const [newAreaName, setNewAreaName] = useState('');
 
   const tabs = [
     { name: 'General', icon: Store },
@@ -37,10 +41,11 @@ export default function SettingsDashboard({ siteSettings, updateSetting, handleS
 
   const deliveryAreas = siteSettings?.DELIVERY_AREAS_SETTINGS || [];
   
-  const handleAddCity = () => {
-    const newCity = prompt('Enter city name (e.g. Karachi):');
-    if (newCity) {
-      updateSetting('DELIVERY_AREAS_SETTINGS', '', [...deliveryAreas, { city: newCity, areas: [] }]);
+  const handleAddCitySubmit = () => {
+    if (newCityName.trim()) {
+      updateSetting('DELIVERY_AREAS_SETTINGS', '', [...deliveryAreas, { city: newCityName.trim(), areas: [] }]);
+      setNewCityName('');
+      setIsAddingCity(false);
     }
   };
 
@@ -51,12 +56,13 @@ export default function SettingsDashboard({ siteSettings, updateSetting, handleS
     }
   };
 
-  const handleAddArea = (cityIndex: number) => {
-    const newArea = prompt('Enter area name (e.g. Clifton):');
-    if (newArea) {
+  const handleAddAreaSubmit = (cityIndex: number) => {
+    if (newAreaName.trim()) {
       const updated = [...deliveryAreas];
-      updated[cityIndex].areas.push(newArea);
+      updated[cityIndex].areas.push(newAreaName.trim());
       updateSetting('DELIVERY_AREAS_SETTINGS', '', updated);
+      setNewAreaName('');
+      setAddingAreaToCityIndex(null);
     }
   };
 
@@ -241,10 +247,32 @@ export default function SettingsDashboard({ siteSettings, updateSetting, handleS
             <div className="bg-rig-background border border-rig-border rounded-2xl p-4 sm:p-8 shadow-sm">
                <div className="flex items-center justify-between mb-6 border-b border-rig-border pb-4">
                  <h3 className="text-lg font-bold text-rig-text">Delivery Areas</h3>
-                 <button onClick={handleAddCity} className="bg-rig-primary px-4 py-2 rounded-lg text-white font-bold text-sm hover:bg-rig-primary/90 transition-colors">
-                   + Add City
-                 </button>
+                 {!isAddingCity && (
+                   <button onClick={() => setIsAddingCity(true)} className="bg-rig-primary px-4 py-2 rounded-lg text-white font-bold text-sm hover:bg-rig-primary/90 transition-colors">
+                     + Add City
+                   </button>
+                 )}
                </div>
+
+               {isAddingCity && (
+                 <div className="mb-6 bg-rig-surface border border-rig-border p-4 rounded-xl flex items-center gap-3">
+                   <input
+                     autoFocus
+                     type="text"
+                     value={newCityName}
+                     onChange={(e) => setNewCityName(e.target.value)}
+                     onKeyDown={(e) => e.key === 'Enter' && handleAddCitySubmit()}
+                     placeholder="Enter city name (e.g. Karachi)"
+                     className="flex-1 bg-rig-background border border-rig-border rounded-lg px-4 py-2 text-sm text-rig-text focus:outline-none focus:border-rig-primary"
+                   />
+                   <button onClick={handleAddCitySubmit} className="bg-rig-primary text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-rig-primary/90">
+                     Save
+                   </button>
+                   <button onClick={() => { setIsAddingCity(false); setNewCityName(''); }} className="text-rig-muted hover:text-rig-text text-sm font-medium px-2">
+                     Cancel
+                   </button>
+                 </div>
+               )}
                
                {deliveryAreas.length === 0 ? (
                  <div className="text-center text-rig-muted py-8">
@@ -259,15 +287,33 @@ export default function SettingsDashboard({ siteSettings, updateSetting, handleS
                            <MapPin size={18} className="text-rig-primary" /> {cityObj.city}
                          </h4>
                          <div className="flex gap-2">
-                           <button onClick={() => handleAddArea(cityIndex)} className="text-xs bg-rig-background border border-rig-border px-3 py-1.5 rounded-lg text-rig-text hover:bg-rig-border/50">
-                             + Add Area
-                           </button>
+                           {addingAreaToCityIndex !== cityIndex && (
+                             <button onClick={() => setAddingAreaToCityIndex(cityIndex)} className="text-xs bg-rig-background border border-rig-border px-3 py-1.5 rounded-lg text-rig-text hover:bg-rig-border/50">
+                               + Add Area
+                             </button>
+                           )}
                            <button onClick={() => handleRemoveCity(cityIndex)} className="text-xs bg-red-500/10 text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-500/20">
                              Remove
                            </button>
                          </div>
                        </div>
                        
+                       {addingAreaToCityIndex === cityIndex && (
+                         <div className="mb-4 bg-rig-background border border-rig-border p-3 rounded-lg flex items-center gap-3">
+                           <input
+                             autoFocus
+                             type="text"
+                             value={newAreaName}
+                             onChange={(e) => setNewAreaName(e.target.value)}
+                             onKeyDown={(e) => e.key === 'Enter' && handleAddAreaSubmit(cityIndex)}
+                             placeholder="Enter area name"
+                             className="flex-1 bg-transparent text-sm text-rig-text focus:outline-none"
+                           />
+                           <button onClick={() => handleAddAreaSubmit(cityIndex)} className="text-rig-primary font-bold text-sm">Save</button>
+                           <button onClick={() => { setAddingAreaToCityIndex(null); setNewAreaName(''); }} className="text-rig-muted text-sm">Cancel</button>
+                         </div>
+                       )}
+
                        <div className="flex flex-wrap gap-2">
                          {cityObj.areas && cityObj.areas.length > 0 ? (
                            cityObj.areas.map((area: string, areaIndex: number) => (
