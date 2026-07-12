@@ -293,6 +293,9 @@ export default function AdminDashboard() {
       </tr>
     `).join('') || '';
 
+    const itemsSubtotal = order.items.reduce((sum: number, item: any) => sum + ((item.priceAtSale || item.product?.basePrice || 0) * item.quantity), 0);
+    const shippingFee = order.totalAmount - itemsSubtotal;
+
     const html = `
       <!DOCTYPE html>
       <html>
@@ -393,11 +396,11 @@ export default function AdminDashboard() {
             <div class="totals">
               <div class="total-row">
                 <span>Subtotal:</span>
-                <span>Rs ${order.totalAmount.toLocaleString()}</span>
+                <span>Rs ${itemsSubtotal.toLocaleString()}</span>
               </div>
               <div class="total-row">
                 <span>Shipping Fee:</span>
-                <span>Rs 0</span>
+                <span>Rs ${shippingFee.toLocaleString()}</span>
               </div>
               <div class="grand-total">
                 <span>Grand Total:</span>
