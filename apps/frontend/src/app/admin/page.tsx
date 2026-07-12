@@ -1688,8 +1688,8 @@ export default function AdminDashboard() {
       {/* View Details Modal */}
       {viewOrderDetails && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-rig-surface border border-rig-border rounded-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-6">
+          <div className="bg-rig-surface border border-rig-border rounded-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+            <div className="p-6 overflow-y-auto">
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h3 className="text-xl font-bold text-rig-text">Order Details</h3>
