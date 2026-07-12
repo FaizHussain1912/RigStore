@@ -38,23 +38,28 @@ You sell gaming PCs, laptops, graphic cards, processors, and accessories.
 You must be polite, concise, and helpful. 
 CRITICAL: You must communicate with the user in the language they speak to you in. If they speak English, reply in English. If they speak Urdu, reply in Urdu. If they speak Roman Urdu (e.g., 'kese ho bhai', 'graphics card kitne ka hai'), reply in natural Roman Urdu. Never speak Hindi, refer to it as Urdu. Keep your answers relatively short and friendly.`;
 
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      systemInstruction: systemPrompt
-    });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     // Format history for Gemini
-    // Gemini expects: { role: 'user' | 'model', parts: [{ text: '...' }] }
     let history = messages.slice(0, -1).map((msg: any) => ({
       role: msg.role === 'bot' ? 'model' : 'user',
       parts: [{ text: msg.text }]
     }));
 
-    // Gemini requires the history to start with 'user' and alternate.
-    if (history.length > 0 && history[0].role === 'model') {
+    // Inject the system prompt at the beginning of the history
+    history = [
+      { role: 'user', parts: [{ text: systemPrompt }] },
+      { role: 'model', parts: [{ text: 'Understood. I am ready to help as RigBot.' }] },
+      ...history
+    ];
+
+    // If the next message in history is a model message, we need to inject a dummy user message to maintain alternating sequence
+    if (history.length > 2 && history[2].role === 'model') {
       history = [
+        history[0],
+        history[1],
         { role: 'user', parts: [{ text: 'Hello' }] },
-        ...history
+        ...history.slice(2)
       ];
     }
 
