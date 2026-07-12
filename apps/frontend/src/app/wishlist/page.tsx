@@ -130,9 +130,9 @@ export default function WishlistPage() {
                   </div>
                   <button 
                     onClick={() => addToCart(item.product)}
-                    className="w-full bg-rig-surface hover:bg-rig-primary text-white py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors border border-rig-border hover:border-rig-primary font-medium group/btn"
+                    className="w-full bg-rig-surface hover:bg-rig-primary text-rig-text hover:text-white py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors border border-rig-border hover:border-rig-primary font-medium group/btn"
                   >
-                    <ShoppingCart className="w-4 h-4 text-rig-primary group-hover/btn:text-rig-text transition-colors" />
+                    <ShoppingCart className="w-4 h-4 text-rig-primary group-hover/btn:text-white transition-colors" />
                     Move to Cart
                   </button>
                 </div>
