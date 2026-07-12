@@ -6,6 +6,7 @@ import { useAuth } from './AuthContext';
 export type CartItem = {
   id: string;
   sku: string;
+  slug: string;
   name: string;
   brand: string;
   basePrice: number;
@@ -92,6 +93,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       id: i.product.id,
       productId: i.product.id,
       sku: i.product.sku,
+      slug: i.product.slug,
       name: i.product.name,
       brand: i.product.brand,
       basePrice: i.product.basePrice,
@@ -120,6 +122,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         id: product.id,
         productId: product.id,
         sku: product.sku,
+        slug: product.slug,
         name: product.name,
         brand: product.brand,
         basePrice: product.basePrice,
