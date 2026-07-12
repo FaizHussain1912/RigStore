@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { ShoppingCart, User as UserIcon, Heart, LogOut, LayoutDashboard, Settings, Phone, MapPin, Sun, Moon, Menu, X, ChevronDown } from 'lucide-react';
+import { ShoppingCart, User as UserIcon, Heart, LogOut, LayoutDashboard, Settings, Phone, MapPin, Sun, Moon, Menu, X, ChevronDown, AlertCircle } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import MegaMenu from './MegaMenu';
 import { useCart } from '../app/CartContext';
