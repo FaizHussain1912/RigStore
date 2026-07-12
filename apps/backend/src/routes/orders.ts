@@ -53,9 +53,9 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
     }, 0);
     const totalAmount = itemsTotal + shippingRate;
 
-    // Format full address as "City, Area, Address, ZipCode, Country"
+    // Format full address as "Address, Area, City, ZipCode, Country"
     const fullAddress = shippingAddress 
-      ? `${shippingAddress.city || ''}, ${shippingAddress.area || ''}, ${shippingAddress.address || ''}, ${shippingAddress.zipCode || ''}, ${shippingAddress.country || ''}`.replace(/(^,\s*)|(,\s*$)/g, '').replace(/,\s*,/g, ',')
+      ? [shippingAddress.address, shippingAddress.area, shippingAddress.city, shippingAddress.zipCode, shippingAddress.country].filter(Boolean).join(', ')
       : undefined;
 
     // Create Order
