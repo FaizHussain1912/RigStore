@@ -15,7 +15,7 @@ interface ProductClientProps {
 export default function ProductClient({ slug, initialProduct }: ProductClientProps) {
   const [product, setProduct] = useState<any>(initialProduct);
   const { addToCart } = useCart();
-  const { addToWishlist } = useWishlist();
+  const { addToWishlist, removeFromWishlist, wishlistItems } = useWishlist();
   const { formatPrice } = useCurrency();
 
   useEffect(() => {
@@ -23,10 +23,6 @@ export default function ProductClient({ slug, initialProduct }: ProductClientPro
       setProduct(initialProduct);
     }
   }, [initialProduct]);
-
-  // Removed the local addToWishlist function since we use the context now.
-
-
 
   if (!product) {
     return (
@@ -38,45 +34,51 @@ export default function ProductClient({ slug, initialProduct }: ProductClientPro
     );
   }
 
-  const specs = product.specs ? Object.entries(product.specs) : [];
-  const inStock = product.inventory && (product.inventory.totalStock - product.inventory.lockedStock > 0);
+  const inStock = product.inventory?.totalStock > 0;
+  const specs = Object.entries(product.specs || {}).filter(([k, v]) => v);
+  const isWishlisted = wishlistItems.some(item => item.product.id === product.id);
 
   return (
-    <div className="container-dense pt-12">
-      {/* Breadcrumbs */}
-      <div className="flex items-center gap-2 text-sm text-rig-muted mb-8">
+    <div className="container-dense py-12 lg:py-24 animate-in fade-in duration-500">
+      
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-sm text-rig-muted mb-8 font-medium">
         <Link href="/" className="hover:text-rig-text transition-colors">Home</Link>
         <ChevronRight size={14} />
-        <Link href={`/category/${product.category?.slug}`} className="hover:text-rig-text transition-colors capitalize">
-          {product.category?.name || 'Category'}
-        </Link>
+        <Link href={`/category/${product.category?.slug}`} className="hover:text-rig-text transition-colors">{product.category?.name}</Link>
         <ChevronRight size={14} />
-        <span className="text-rig-text truncate max-w-xs">{product.name}</span>
+        <span className="text-rig-text">{product.name}</span>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {/* Left Column - Image */}
-        <div className="glass-panel rounded-2xl p-8 flex items-center justify-center min-h-[500px]">
-          <img 
-            src={product.imageUrl} 
-            alt={product.name}
-            className="w-full max-w-md h-auto object-contain transform hover:scale-105 transition-transform duration-500"
-          />
+      <div className="flex flex-col lg:flex-row gap-12 lg:gap-24">
+        {/* Left: Image Viewer (Placeholder) */}
+        <div className="w-full lg:w-1/2 flex flex-col gap-4">
+          <div className="w-full aspect-square bg-rig-surface border border-rig-border rounded-2xl flex items-center justify-center p-8 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,70,85,0.05)_0%,transparent_70%)] opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+            {product.imageUrl ? (
+              <img src={product.imageUrl} alt={product.name} className="max-w-full max-h-full object-contain relative z-10" />
+            ) : (
+              <div className="text-rig-muted font-mono text-sm border border-dashed border-rig-border/50 p-12 rounded relative z-10">
+                [ Product Image {product.sku} ]
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Right Column - Product Details */}
-        <div className="flex flex-col">
-          <div className="mb-2 uppercase text-xs font-bold tracking-widest text-rig-primary">
+        {/* Right: Product Details */}
+        <div className="w-full lg:w-1/2 flex flex-col">
+          <div className="text-xs font-bold text-rig-primary uppercase tracking-widest mb-2 flex items-center gap-2">
             {product.brand}
+            <span className="w-1.5 h-1.5 rounded-full bg-rig-primary"></span>
+            <span className="text-rig-muted">{product.category?.name}</span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-rig-text mb-4 leading-tight">
+          
+          <h1 className="text-3xl lg:text-5xl font-bold text-rig-text mb-4 leading-tight tracking-tight">
             {product.name}
           </h1>
           
-          <div className="flex items-center gap-4 mb-6 pb-6 border-b border-rig-border/50">
-            <div className="text-3xl font-black text-rig-text">
-              {formatPrice(product.basePrice)}
-            </div>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="text-3xl font-bold text-rig-text">{formatPrice(product.basePrice)}</div>
             <div className={`px-3 py-1 rounded-full text-xs font-bold border ${inStock ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
               {inStock ? 'IN STOCK' : 'OUT OF STOCK'}
             </div>
@@ -97,10 +99,10 @@ export default function ProductClient({ slug, initialProduct }: ProductClientPro
               {inStock ? 'Add to Cart' : 'Out of Stock'}
             </button>
             <button 
-              onClick={() => addToWishlist(product)}
+              onClick={() => isWishlisted ? removeFromWishlist(product.id) : addToWishlist(product)}
               className="bg-rig-surface border border-rig-border hover:border-rig-primary text-rig-text font-bold px-6 py-4 rounded-xl flex items-center justify-center transition-colors group"
             >
-              <Heart size={20} className="text-rig-muted group-hover:text-rig-primary transition-colors" />
+              <Heart size={20} className={`transition-colors ${isWishlisted ? 'text-red-500 fill-red-500' : 'text-rig-muted group-hover:text-rig-primary'}`} />
             </button>
           </div>
 
