@@ -93,13 +93,14 @@ export default function HeroSlider({ banners }: { banners: BannerData[] }) {
           </>
         )}
 
-        {/* Sliding Track */}
-        <div 
-          className="w-full flex transition-transform duration-700 ease-in-out"
-          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-        >
-          {activeBanners.map((banner, idx) => (
-            <div key={idx} className="min-w-full w-full flex-shrink-0 flex flex-col md:flex-row items-center gap-8 justify-between px-1">
+        {/* Sliding Track Wrapper (hides overflow inside padding area) */}
+        <div className="w-full overflow-hidden rounded-xl">
+          <div 
+            className="w-full flex transition-transform duration-700 ease-in-out"
+            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+          >
+            {activeBanners.map((banner, idx) => (
+              <div key={idx} className="min-w-full w-full flex-shrink-0 flex flex-col md:flex-row items-center gap-8 justify-between px-1">
               
               <div className="flex flex-col items-start gap-4 max-w-2xl">
                 <div className="bg-rig-primary/20 text-rig-primary border border-rig-primary/30 px-3 py-1 text-xs font-bold uppercase tracking-widest rounded-sm flex items-center gap-2">
@@ -133,6 +134,7 @@ export default function HeroSlider({ banners }: { banners: BannerData[] }) {
 
             </div>
           ))}
+          </div>
         </div>
       </div>
       
