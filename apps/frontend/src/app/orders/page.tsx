@@ -6,10 +6,12 @@ import { Package, Clock, CheckCircle2, XCircle, Printer, AlertTriangle } from 'l
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { useCurrency } from '../CurrencyContext';
+import { useToast } from '../ToastContext';
 
 export default function OrdersPage() {
   const { user, token } = useAuth();
   const { formatPrice } = useCurrency();
+  const { toast } = useToast();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -115,12 +117,14 @@ export default function OrdersPage() {
         // Update local state
         setOrders(orders.map(o => o.id === cancellingOrderId ? { ...o, cancelRequested: true, cancelReason } : o));
         setCancelModalOpen(false);
+        toast({ title: 'Request Submitted', description: 'Your cancellation request has been sent to the team.' });
       } else {
-        alert('Failed to request cancellation');
+        const errorData = await res.json().catch(() => null);
+        toast({ title: 'Request Failed', description: errorData?.error || 'Failed to request cancellation', variant: 'destructive' });
       }
     } catch (err) {
       console.error(err);
-      alert('An error occurred');
+      toast({ title: 'Error', description: 'An unexpected error occurred.', variant: 'destructive' });
     } finally {
       setIsSubmittingCancel(false);
     }

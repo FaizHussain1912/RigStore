@@ -122,9 +122,9 @@ router.post('/:id/cancel-request', requireAuth, async (req: AuthRequest, res) =>
     });
 
     res.json(updatedOrder);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Cancel request error:', error);
-    res.status(500).json({ error: 'Failed to request cancellation' });
+    res.status(500).json({ error: error.message || 'Failed to request cancellation' });
   }
 });
 
