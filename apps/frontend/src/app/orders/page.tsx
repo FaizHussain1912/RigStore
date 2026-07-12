@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../AuthContext';
-import { Package, Clock, CheckCircle2, XCircle, Printer } from 'lucide-react';
+import { Package, Clock, CheckCircle2, XCircle, Printer, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { useCurrency } from '../CurrencyContext';
@@ -12,6 +12,12 @@ export default function OrdersPage() {
   const { formatPrice } = useCurrency();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Cancellation Modal State
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
+  const [isSubmittingCancel, setIsSubmittingCancel] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6767';
 
@@ -84,6 +90,39 @@ export default function OrdersPage() {
       case 'DELIVERED': return <CheckCircle2 className="w-4 h-4" />;
       case 'CANCELLED': return <XCircle className="w-4 h-4" />;
       default: return <Package className="w-4 h-4" />;
+    }
+  };
+
+  const openCancelModal = (orderId: string) => {
+    setCancellingOrderId(orderId);
+    setCancelReason('');
+    setCancelModalOpen(true);
+  };
+
+  const handleCancelSubmit = async () => {
+    if (!cancellingOrderId || !token) return;
+    setIsSubmittingCancel(true);
+    try {
+      const res = await fetch(`${API_URL}/api/orders/${cancellingOrderId}/cancel-request`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ reason: cancelReason })
+      });
+      if (res.ok) {
+        // Update local state
+        setOrders(orders.map(o => o.id === cancellingOrderId ? { ...o, cancelRequested: true, cancelReason } : o));
+        setCancelModalOpen(false);
+      } else {
+        alert('Failed to request cancellation');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred');
+    } finally {
+      setIsSubmittingCancel(false);
     }
   };
 
@@ -291,6 +330,20 @@ export default function OrdersPage() {
                     {getStatusIcon(order.status)}
                     {order.status}
                   </div>
+                  {order.cancelRequested && order.status !== 'CANCELLED' && (
+                    <div className="px-3 py-1.5 rounded-full border border-orange-500/20 bg-orange-500/10 text-orange-500 flex items-center gap-2 text-sm font-semibold">
+                      <AlertTriangle className="w-4 h-4" />
+                      Cancellation Requested
+                    </div>
+                  )}
+                  {order.status === 'PENDING' && !order.cancelRequested && (
+                    <button 
+                      onClick={() => openCancelModal(order.id)}
+                      className="px-3 py-1.5 rounded-full border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors flex items-center gap-2 text-sm font-semibold"
+                    >
+                      <XCircle className="w-4 h-4" /> Cancel Order
+                    </button>
+                  )}
                   <button 
                     onClick={() => handlePrintOrder(order)}
                     className="p-1.5 rounded-full bg-rig-surface border border-rig-border text-rig-muted hover:text-rig-text hover:bg-rig-background transition-colors"
@@ -325,6 +378,49 @@ export default function OrdersPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Cancel Request Modal */}
+      {cancelModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-rig-surface border border-rig-border shadow-2xl rounded-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-rig-border">
+              <h3 className="text-xl font-bold flex items-center gap-2 text-red-500">
+                <AlertTriangle /> Cancel Order
+              </h3>
+            </div>
+            <div className="p-6">
+              <p className="text-rig-muted mb-4">
+                Please provide a reason for cancelling this order. Our team will review your request.
+              </p>
+              <textarea
+                className="w-full bg-rig-background border border-rig-border rounded-lg p-3 text-rig-text focus:outline-none focus:border-rig-primary h-24 resize-none"
+                placeholder="Reason for cancellation (optional)"
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+              />
+            </div>
+            <div className="p-6 bg-rig-background border-t border-rig-border flex justify-end gap-3">
+              <button 
+                onClick={() => setCancelModalOpen(false)}
+                className="px-4 py-2 rounded-lg font-semibold text-rig-muted hover:text-rig-text transition-colors"
+                disabled={isSubmittingCancel}
+              >
+                Go Back
+              </button>
+              <button 
+                onClick={handleCancelSubmit}
+                className="px-4 py-2 rounded-lg font-semibold bg-red-600 hover:bg-red-700 text-white transition-colors flex items-center gap-2"
+                disabled={isSubmittingCancel}
+              >
+                {isSubmittingCancel ? (
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                ) : null}
+                Submit Request
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </main>

@@ -737,6 +737,11 @@ export default function AdminDashboard() {
                                 {order.user.name} <span className="bg-rig-surface border border-rig-border text-[10px] px-1.5 py-0.5 rounded text-rig-muted font-normal">CUSTOMER</span>
                               </div>
                               <div className="text-xs text-rig-muted mt-0.5">{order.user.email}</div>
+                              {order.cancelRequested && order.status !== 'CANCELLED' && (
+                                <div className="mt-2 text-xs font-bold text-red-500 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded inline-block max-w-[200px] truncate" title={order.cancelReason || 'No reason provided'}>
+                                  Cancellation Requested: {order.cancelReason || 'No reason provided'}
+                                </div>
+                              )}
                             </td>
                             <td className="p-4 text-center font-medium text-sm text-rig-text">
                               {order.items?.reduce((acc: number, i: any) => acc + i.quantity, 0) || 0}

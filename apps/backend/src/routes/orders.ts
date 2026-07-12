@@ -91,5 +91,41 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
     res.status(500).json({ error: 'Failed to process checkout' });
   }
 });
+// Request Order Cancellation
+router.post('/:id/cancel-request', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const order = await prisma.order.findUnique({
+      where: { id }
+    });
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    if (order.userId !== req.user!.userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    if (order.status !== 'PENDING') {
+      return res.status(400).json({ error: 'Only pending orders can be cancelled' });
+    }
+
+    const updatedOrder = await prisma.order.update({
+      where: { id },
+      data: {
+        cancelRequested: true,
+        cancelReason: reason || null
+      }
+    });
+
+    res.json(updatedOrder);
+  } catch (error) {
+    console.error('Cancel request error:', error);
+    res.status(500).json({ error: 'Failed to request cancellation' });
+  }
+});
 
 export default router;

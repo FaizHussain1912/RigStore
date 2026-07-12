@@ -138,6 +138,9 @@ model Order {
   phone         String?
   address       String?
   paymentMethod String      @default("Cash on Delivery")
+  
+  cancelRequested Boolean   @default(false)
+  cancelReason    String?
 
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
