@@ -41,6 +41,13 @@ export default function AdminDashboard() {
     name: '', sku: '', slug: '', brand: '', basePrice: 0, categoryId: '', 
     description: '', imageUrl: '', totalStock: 0, specs: '{}', compatibility: '{}'
   });
+  
+  // User Management State
+  const [editUserModalOpen, setEditUserModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [editingUserName, setEditingUserName] = useState('');
+  const [isSubmittingEditUser, setIsSubmittingEditUser] = useState(false);
+
   const [loading, setLoading] = useState(true);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6767';
@@ -596,6 +603,56 @@ export default function AdminDashboard() {
     return matchesSearch && matchesCategory;
   });
 
+  const handleUpdateUser = async () => {
+    if (!editingUser || !editingUserName.trim() || !token) return;
+    setIsSubmittingEditUser(true);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/users/${editingUser.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ name: editingUserName })
+      });
+      if (res.ok) {
+        toast('User updated successfully.', 'success');
+        setEditUserModalOpen(false);
+        fetchData(); // Refresh users
+      } else {
+        const err = await res.json().catch(()=>null);
+        toast(err?.error || 'Failed to update user', 'error');
+      }
+    } catch (err) {
+      toast('Network error', 'error');
+    } finally {
+      setIsSubmittingEditUser(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!token) return;
+    setIsSubmittingEditUser(true);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        toast('User account and related orders deleted.', 'success');
+        setConfirmDialog(null);
+        fetchData(); // Refresh users
+      } else {
+        const err = await res.json().catch(()=>null);
+        toast(err?.error || 'Failed to delete user', 'error');
+      }
+    } catch (err) {
+      toast('Network error', 'error');
+    } finally {
+      setIsSubmittingEditUser(false);
+    }
+  };
+
   if (!isAdmin) return null;
 
   return (
@@ -890,6 +947,7 @@ export default function AdminDashboard() {
                       <th className="p-4 font-semibold text-rig-muted text-sm">Role</th>
                       <th className="p-4 font-semibold text-rig-muted text-sm">Joined</th>
                       <th className="p-4 font-semibold text-rig-muted text-sm text-right">Total Orders</th>
+                      <th className="p-4 font-semibold text-rig-muted text-sm text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-rig-border/50">
@@ -904,6 +962,33 @@ export default function AdminDashboard() {
                         </td>
                         <td className="p-4 text-sm text-rig-muted">{format(new Date(u.createdAt), 'MMM dd, yyyy')}</td>
                         <td className="p-4 text-right font-bold">{u._count.orders}</td>
+                        <td className="p-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button 
+                              onClick={() => {
+                                setEditingUser(u);
+                                setEditingUserName(u.name || '');
+                                setEditUserModalOpen(true);
+                              }}
+                              className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors"
+                              title="Edit Name"
+                            >
+                              <Edit size={18} />
+                            </button>
+                            <button 
+                              onClick={() => setConfirmDialog({
+                                isOpen: true,
+                                title: 'Delete Customer Account',
+                                message: `Are you sure you want to delete ${u.name}'s account? This will permanently delete their account and all their order history.`,
+                                onConfirm: () => handleDeleteUser(u.id)
+                              })}
+                              className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                              title="Delete Account"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -1776,10 +1861,67 @@ export default function AdminDashboard() {
                 </button>
                 <button 
                   onClick={confirmDialog.onConfirm}
-                  className="px-4 py-2 rounded-lg font-bold bg-red-500 hover:bg-red-600 text-white transition-colors"
+                  disabled={isSubmittingEditUser}
+                  className="px-4 py-2 rounded-lg font-bold bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white transition-colors"
                 >
-                  Delete
+                  {isSubmittingEditUser ? 'Deleting...' : 'Delete'}
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {editUserModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-rig-surface border border-rig-border rounded-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-6">
+                <h3 className="text-xl font-bold text-rig-text">Edit Customer Name</h3>
+                <button 
+                  onClick={() => setEditUserModalOpen(false)}
+                  className="text-rig-muted hover:text-rig-text transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-bold text-rig-muted block mb-2">Display Name</label>
+                  <input 
+                    type="text" 
+                    value={editingUserName}
+                    onChange={(e) => setEditingUserName(e.target.value)}
+                    className="w-full bg-rig-background border border-rig-border rounded-xl px-4 py-3 text-rig-text focus:outline-none focus:border-rig-primary transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-bold text-rig-muted block mb-2">Email</label>
+                  <input 
+                    type="email" 
+                    value={editingUser?.email || ''}
+                    disabled
+                    className="w-full bg-rig-background/50 border border-rig-border/50 rounded-xl px-4 py-3 text-rig-muted cursor-not-allowed"
+                  />
+                </div>
+                
+                <div className="pt-4 border-t border-rig-border flex justify-end gap-3">
+                  <button 
+                    onClick={() => setEditUserModalOpen(false)}
+                    className="px-4 py-2 rounded-lg font-medium text-rig-muted hover:text-rig-text hover:bg-rig-background transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleUpdateUser}
+                    disabled={isSubmittingEditUser}
+                    className="px-6 py-2 bg-rig-primary hover:bg-rig-primary/90 disabled:opacity-50 text-white rounded-lg font-bold transition-colors"
+                  >
+                    {isSubmittingEditUser ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

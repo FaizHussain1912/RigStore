@@ -82,4 +82,51 @@ router.get('/me', requireAuth, async (req: AuthRequest, res) => {
   }
 });
 
+// PUT /api/auth/me
+router.put('/me', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const { name } = req.body;
+    
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+
+    const user = await prisma.user.update({
+      where: { id: req.user?.userId },
+      data: { name },
+      select: { id: true, name: true, email: true, role: true }
+    });
+
+    res.json({ user });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update user' });
+  }
+});
+
+// DELETE /api/auth/me
+router.delete('/me', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) return res.status(400).json({ error: 'Not authenticated' });
+
+    // Find all user's orders
+    const userOrders = await prisma.order.findMany({ where: { userId } });
+    const orderIds = userOrders.map(o => o.id);
+    
+    // Delete related OrderItems first, then Orders (since cascade is not on schema)
+    if (orderIds.length > 0) {
+      await prisma.orderItem.deleteMany({ where: { orderId: { in: orderIds } } });
+      await prisma.order.deleteMany({ where: { userId } });
+    }
+
+    // Finally delete the user
+    await prisma.user.delete({ where: { id: userId } });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete self account error:', error);
+    res.status(500).json({ error: 'Failed to delete account' });
+  }
+});
+
 export default router;

@@ -7,19 +7,80 @@ import MegaMenu from './MegaMenu';
 import { useCart } from '../app/CartContext';
 import { useAuth } from '../app/AuthContext';
 import { useWishlist } from '../app/WishlistContext';
+import { useToast } from '../app/ToastContext';
 import Link from 'next/link';
 
 export default function Navbar({ customLinks = [], generalSettings = {} }: { customLinks?: {label: string, url: string}[], generalSettings?: any }) {
   const { cart, setIsCartOpen } = useCart();
-  const { user, token, logout, isAdmin } = useAuth();
+  const { user, token, logout, isAdmin, updateUser } = useAuth();
   const { wishlistItems, setIsWishlistOpen } = useWishlist();
   const { theme, setTheme } = useTheme();
+  const { toast } = useToast();
+  
   const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [isMobileCategoriesOpen, setIsMobileCategoriesOpen] = React.useState(false);
   
+  const [isProfileModalOpen, setIsProfileModalOpen] = React.useState(false);
+  const [editName, setEditName] = React.useState('');
+  const [isSubmittingProfile, setIsSubmittingProfile] = React.useState(false);
+  const [confirmDelete, setConfirmDelete] = React.useState(false);
+
   const itemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const wishlistCount = wishlistItems.length;
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6767';
+
+  const handleUpdateProfile = async () => {
+    if (!editName.trim() || !token) return;
+    setIsSubmittingProfile(true);
+    try {
+      const res = await fetch(`${API_URL}/api/auth/me`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ name: editName })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        updateUser(data.user);
+        toast('Profile updated successfully!', 'success');
+        setIsProfileModalOpen(false);
+      } else {
+        const err = await res.json().catch(()=>null);
+        toast(err?.error || 'Failed to update profile', 'error');
+      }
+    } catch (err) {
+      toast('Network error', 'error');
+    } finally {
+      setIsSubmittingProfile(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!token) return;
+    setIsSubmittingProfile(true);
+    try {
+      const res = await fetch(`${API_URL}/api/auth/me`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        toast('Account deleted successfully.', 'success');
+        setIsProfileModalOpen(false);
+        logout();
+      } else {
+        const err = await res.json().catch(()=>null);
+        toast(err?.error || 'Failed to delete account', 'error');
+      }
+    } catch (err) {
+      toast('Network error', 'error');
+    } finally {
+      setIsSubmittingProfile(false);
+    }
+  };
 
   return (
     <nav className="border-b border-rig-border bg-rig-surface px-4 z-40 relative">
@@ -119,6 +180,16 @@ export default function Navbar({ customLinks = [], generalSettings = {} }: { cus
                         <Settings className="w-4 h-4" /> Admin Panel
                       </Link>
                     )}
+                    <button 
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        setEditName(user?.name || '');
+                        setIsProfileModalOpen(true);
+                      }} 
+                      className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-rig-muted hover:bg-rig-background hover:text-rig-text"
+                    >
+                      <UserIcon className="w-4 h-4" /> My Profile
+                    </button>
                     <Link onClick={() => setIsUserMenuOpen(false)} href="/orders" className="flex items-center gap-2 px-4 py-2 text-sm text-rig-muted hover:bg-rig-background hover:text-rig-text">
                       <LayoutDashboard className="w-4 h-4" /> My Orders
                     </Link>
@@ -181,6 +252,16 @@ export default function Navbar({ customLinks = [], generalSettings = {} }: { cus
                       <Settings className="w-4 h-4" /> Admin Panel
                     </Link>
                   )}
+                  <button 
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setEditName(user?.name || '');
+                      setIsProfileModalOpen(true);
+                    }} 
+                    className="flex items-center gap-2 text-rig-muted hover:text-rig-text font-medium text-sm mt-1 w-full text-left"
+                  >
+                    <UserIcon className="w-4 h-4" /> My Profile
+                  </button>
                   <Link onClick={() => setIsMobileMenuOpen(false)} href="/orders" className="flex items-center gap-2 text-rig-muted hover:text-rig-text font-medium text-sm mt-1">
                     <LayoutDashboard className="w-4 h-4" /> My Orders
                   </Link>
@@ -244,6 +325,89 @@ export default function Navbar({ customLinks = [], generalSettings = {} }: { cus
               ))}
               <Link href="/about" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-bold text-rig-text">About Us</Link>
               <Link href="/contact" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-bold text-rig-text">Contact</Link>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Profile Modal */}
+      {isProfileModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-rig-surface border border-rig-border rounded-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-6">
+                <h3 className="text-xl font-bold text-rig-text">My Profile</h3>
+                <button 
+                  onClick={() => setIsProfileModalOpen(false)}
+                  className="text-rig-muted hover:text-rig-text transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {!confirmDelete ? (
+                <div className="space-y-6">
+                  <div>
+                    <label className="text-sm font-bold text-rig-muted block mb-2">Display Name</label>
+                    <input 
+                      type="text" 
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="w-full bg-rig-background border border-rig-border rounded-xl px-4 py-3 text-rig-text focus:outline-none focus:border-rig-primary transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-bold text-rig-muted block mb-2">Email</label>
+                    <input 
+                      type="email" 
+                      value={user?.email || ''}
+                      disabled
+                      className="w-full bg-rig-background/50 border border-rig-border/50 rounded-xl px-4 py-3 text-rig-muted cursor-not-allowed"
+                    />
+                    <p className="text-xs text-rig-muted mt-2">Email address cannot be changed.</p>
+                  </div>
+                  
+                  <div className="pt-4 border-t border-rig-border flex gap-3">
+                    <button 
+                      onClick={handleUpdateProfile}
+                      disabled={isSubmittingProfile}
+                      className="flex-1 bg-rig-primary hover:bg-rig-primary/90 disabled:opacity-50 text-white py-3 rounded-xl font-bold transition-colors"
+                    >
+                      {isSubmittingProfile ? 'Saving...' : 'Save Changes'}
+                    </button>
+                    <button 
+                      onClick={() => setConfirmDelete(true)}
+                      className="px-6 py-3 border border-red-500/20 text-red-500 hover:bg-red-500/10 rounded-xl font-bold transition-colors"
+                    >
+                      Delete Account
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-center">
+                    <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+                    <h4 className="font-bold text-red-500 mb-2">Are you absolutely sure?</h4>
+                    <p className="text-sm text-red-400">
+                      This action cannot be undone. This will permanently delete your account, remove your data from our servers, and delete all of your order history.
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => setConfirmDelete(false)}
+                      className="flex-1 bg-rig-surface border border-rig-border hover:bg-rig-background text-rig-text py-3 rounded-xl font-bold transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      onClick={handleDeleteAccount}
+                      disabled={isSubmittingProfile}
+                      className="flex-1 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white py-3 rounded-xl font-bold transition-colors"
+                    >
+                      {isSubmittingProfile ? 'Deleting...' : 'Yes, Delete Account'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

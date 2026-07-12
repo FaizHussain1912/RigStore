@@ -15,6 +15,7 @@ interface AuthContextType {
   token: string | null;
   login: (token: string, user: User) => void;
   logout: () => void;
+  updateUser: (user: User) => void;
   isLoading: boolean;
   isAdmin: boolean;
 }
@@ -64,6 +65,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('rigstore_user', JSON.stringify(newUser));
   };
 
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser);
+    localStorage.setItem('rigstore_user', JSON.stringify(updatedUser));
+  };
+
   const logout = () => {
     setToken(null);
     setUser(null);
@@ -73,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isLoading, isAdmin: user?.role === 'ADMIN' }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateUser, isLoading, isAdmin: user?.role === 'ADMIN' }}>
       {children}
     </AuthContext.Provider>
   );
