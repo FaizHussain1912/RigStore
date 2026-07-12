@@ -35,7 +35,6 @@ export async function POST(req: Request) {
     
     // Fetch products to give context to the AI
     const products = await prisma.product.findMany({
-      where: { isVisible: true },
       select: {
         name: true,
         brand: true,
