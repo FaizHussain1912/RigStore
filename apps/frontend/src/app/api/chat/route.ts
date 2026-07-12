@@ -33,10 +33,28 @@ export async function POST(req: Request) {
 
     const genAI = new GoogleGenerativeAI(aiSettings.apiKey);
     
+    // Fetch products to give context to the AI
+    const products = await prisma.product.findMany({
+      where: { isVisible: true },
+      select: {
+        name: true,
+        brand: true,
+        basePrice: true,
+        category: { select: { name: true } }
+      }
+    });
+
+    const catalog = products.map(p => `- ${p.name} (Brand: ${p.brand}, Category: ${p.category?.name || 'N/A'}) - Price: Rs ${p.basePrice}`).join('\n');
+
     const systemPrompt = `You are a helpful customer support assistant for "RigStore", a computer hardware e-commerce store in Pakistan.
 You sell gaming PCs, laptops, graphic cards, processors, and accessories.
 You must be polite, concise, and helpful. 
-CRITICAL: You must communicate with the user in the language they speak to you in. If they speak English, reply in English. If they speak Urdu, reply in Urdu. If they speak Roman Urdu (e.g., 'kese ho bhai', 'graphics card kitne ka hai'), reply in natural Roman Urdu. Never speak Hindi, refer to it as Urdu. Keep your answers relatively short and friendly.`;
+CRITICAL: You must communicate with the user in the language they speak to you in. If they speak English, reply in English. If they speak Urdu, reply in Urdu. If they speak Roman Urdu (e.g., 'kese ho bhai', 'graphics card kitne ka hai'), reply in natural Roman Urdu. Never speak Hindi, refer to it as Urdu. Keep your answers relatively short and friendly.
+
+Here is the current catalog of products available in the store:
+${catalog}
+
+When a user asks for recommendations, ONLY recommend products from the catalog above. Do not invent products or prices. If you can't find an exact match, recommend the closest available product from the catalog.`;
 
     const model = genAI.getGenerativeModel({ 
       model: "gemini-3.5-flash",
