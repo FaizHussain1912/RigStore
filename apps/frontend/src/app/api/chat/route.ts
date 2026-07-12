@@ -69,6 +69,6 @@ CRITICAL: You must communicate with the user in the language they speak to you i
     return NextResponse.json({ reply: responseText });
   } catch (error: any) {
     console.error('Chat API Error:', error);
-    return NextResponse.json({ error: 'Failed to process chat message' }, { status: 500 });
+    return NextResponse.json({ error: error ? (error.message || String(error)) : 'Unknown error' }, { status: 500 });
   }
 }
