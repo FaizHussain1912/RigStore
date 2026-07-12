@@ -32,28 +32,34 @@ export async function POST(req: Request) {
     }
 
     const genAI = new GoogleGenerativeAI(aiSettings.apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-    // Build context prompt
+    
     const systemPrompt = `You are a helpful customer support assistant for "RigStore", a computer hardware e-commerce store in Pakistan.
 You sell gaming PCs, laptops, graphic cards, processors, and accessories.
 You must be polite, concise, and helpful. 
 CRITICAL: You must communicate with the user in the language they speak to you in. If they speak English, reply in English. If they speak Urdu, reply in Urdu. If they speak Roman Urdu (e.g., 'kese ho bhai', 'graphics card kitne ka hai'), reply in natural Roman Urdu. Never speak Hindi, refer to it as Urdu. Keep your answers relatively short and friendly.`;
 
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      systemInstruction: systemPrompt
+    });
+
     // Format history for Gemini
     // Gemini expects: { role: 'user' | 'model', parts: [{ text: '...' }] }
-    const history = messages.slice(0, -1).map((msg: any) => ({
+    let history = messages.slice(0, -1).map((msg: any) => ({
       role: msg.role === 'bot' ? 'model' : 'user',
       parts: [{ text: msg.text }]
     }));
 
-    // Add system prompt to the first message or use it directly
-    const chat = model.startChat({
-      history: [
-        { role: 'user', parts: [{ text: systemPrompt + "\n\nI am the user, hello!" }] },
-        { role: 'model', parts: [{ text: "Hello! How can I help you today?" }] },
+    // Gemini requires the history to start with 'user' and alternate.
+    if (history.length > 0 && history[0].role === 'model') {
+      history = [
+        { role: 'user', parts: [{ text: 'Hello' }] },
         ...history
-      ]
+      ];
+    }
+
+    const chat = model.startChat({
+      history: history
     });
 
     const userMessage = messages[messages.length - 1].text;
