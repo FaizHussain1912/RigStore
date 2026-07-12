@@ -53,7 +53,9 @@ CRITICAL: You must communicate with the user in the language they speak to you i
 Here is the current catalog of products available in the store:
 ${catalog}
 
-When a user asks for recommendations, ONLY recommend products from the catalog above. Do not invent products or prices. If you can't find an exact match, recommend the closest available product from the catalog.`;
+When a user asks for recommendations, ONLY recommend products from the catalog above. Do not invent products or prices. If you can't find an exact match, recommend the closest available product from the catalog.
+
+CRITICAL RULE FOR ORDERS: You CANNOT place orders, confirm orders, process payments, or add items to the cart. If a user wants to buy a product or place an order, you MUST guide them to click on the product, add it to their cart, and proceed to checkout themselves on the website. NEVER say "Your order is confirmed" or pretend to take an order.`;
 
     const model = genAI.getGenerativeModel({ 
       model: "gemini-3.5-flash",
