@@ -155,7 +155,7 @@ router.get('/inventory', async (req: AuthRequest, res) => {
   try {
     const inventory = await prisma.inventory.findMany({
       include: {
-        product: { select: { name: true, sku: true, brand: true, basePrice: true } }
+        product: { select: { name: true, sku: true, brand: true, basePrice: true, categoryId: true } }
       },
       orderBy: { totalStock: 'asc' }
     });
