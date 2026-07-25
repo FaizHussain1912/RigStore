@@ -203,8 +203,8 @@ router.post('/guest-checkout', async (req, res) => {
 router.get('/track/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const order = await prisma.order.findUnique({
-      where: { id },
+    const order = await prisma.order.findFirst({
+      where: { id: { startsWith: id.toLowerCase() } },
       include: {
         user: { select: { name: true, email: true } },
         items: { include: { product: true } }
@@ -227,8 +227,8 @@ router.post('/track/:id/cancel', async (req, res) => {
     const { id } = req.params;
     const { reason } = req.body;
 
-    const order = await prisma.order.findUnique({
-      where: { id }
+    const order = await prisma.order.findFirst({
+      where: { id: { startsWith: id.toLowerCase() } }
     });
 
     if (!order) {
@@ -240,7 +240,7 @@ router.post('/track/:id/cancel', async (req, res) => {
     }
 
     const updatedOrder = await prisma.order.update({
-      where: { id },
+      where: { id: order.id },
       data: {
         cancelRequested: true,
         cancelReason: reason || null

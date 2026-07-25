@@ -120,7 +120,7 @@ export default function CheckoutClient({ shippingRate = 0 }: { shippingRate?: nu
           </p>
           <div className="bg-rig-background p-4 rounded-xl mb-8 border border-rig-border/50">
             <p className="text-sm text-rig-muted mb-1">Your Order ID is:</p>
-            <p className="text-lg font-mono font-bold text-rig-text select-all">{successOrderId}</p>
+            <p className="text-lg font-mono font-bold text-rig-text select-all">{(successOrderId || '').toUpperCase().slice(0, 8)}</p>
             {!user && (
               <p className="text-xs text-orange-400 mt-2">Please save this Order ID to track or cancel your order later.</p>
             )}

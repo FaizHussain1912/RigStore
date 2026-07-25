@@ -226,7 +226,7 @@ export default function TrackOrderPage() {
             required
             value={orderId}
             onChange={(e) => setOrderId(e.target.value)}
-            placeholder="e.g. 123e4567-e89b-12d3-a456-426614174000"
+            placeholder="e.g. A1B2C3D4"
             className="flex-1 bg-rig-background border border-rig-border rounded-xl px-4 py-3 text-rig-text focus:outline-none focus:border-rig-primary transition-colors font-mono"
           />
           <button
@@ -246,7 +246,7 @@ export default function TrackOrderPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
               <div>
                 <div className="text-sm text-rig-muted mb-1">Order Details</div>
-                <div className="text-xl font-bold font-mono text-rig-text">{order.id}</div>
+                <div className="text-xl font-bold font-mono text-rig-text">{(order.id || '').toUpperCase().slice(0, 8)}</div>
                 <div className="text-sm text-rig-muted mt-1">Placed on {new Date(order.createdAt).toLocaleDateString()}</div>
               </div>
               <div className="flex flex-col sm:flex-row items-center gap-4">
