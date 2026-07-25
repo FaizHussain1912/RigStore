@@ -576,10 +576,12 @@ export default function AdminDashboard() {
 
   const filteredOrders = orders.filter(o => {
     const term = orderSearchTerm.toLowerCase();
+    const name = o.user?.name || o.guestName || 'Guest';
+    const email = o.user?.email || o.guestEmail || 'N/A';
     const matchesSearch = !term || 
       o.id.toLowerCase().includes(term) || 
-      o.user.name.toLowerCase().includes(term) ||
-      o.user.email.toLowerCase().includes(term);
+      name.toLowerCase().includes(term) ||
+      email.toLowerCase().includes(term);
     const matchesStatus = orderStatusFilter === 'ALL' || o.status === orderStatusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -589,8 +591,8 @@ export default function AdminDashboard() {
     const rows = filteredOrders.map(o => [
       o.id,
       format(new Date(o.createdAt), 'MMM dd, yyyy'),
-      o.user.name,
-      o.user.email,
+      o.user?.name || o.guestName || 'Guest',
+      o.user?.email || o.guestEmail || 'N/A',
       o.items?.reduce((acc: number, i: any) => acc + i.quantity, 0) || 0,
       o.totalAmount,
       o.status
@@ -858,9 +860,9 @@ export default function AdminDashboard() {
                             <td className="p-4 text-sm text-rig-muted">{format(new Date(order.createdAt), 'M/d/yyyy')}</td>
                             <td className="p-4">
                               <div className="font-bold text-rig-text text-sm flex items-center gap-2">
-                                {order.user.name} <span className="bg-rig-surface border border-rig-border text-[10px] px-1.5 py-0.5 rounded text-rig-muted font-normal">CUSTOMER</span>
+                                {order.user?.name || order.guestName || 'Guest'} <span className="bg-rig-surface border border-rig-border text-[10px] px-1.5 py-0.5 rounded text-rig-muted font-normal">{order.user ? 'CUSTOMER' : 'GUEST'}</span>
                               </div>
-                              <div className="text-xs text-rig-muted mt-0.5">{order.user.email}</div>
+                              <div className="text-xs text-rig-muted mt-0.5">{order.user?.email || order.guestEmail || 'N/A'}</div>
                               {order.cancelRequested && order.status !== 'CANCELLED' && (
                                 <div className="mt-2 text-xs font-bold text-red-500 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded inline-block max-w-[200px] truncate" title={order.cancelReason || 'No reason provided'}>
                                   Cancellation Requested: {order.cancelReason || 'No reason provided'}
@@ -1881,8 +1883,8 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="bg-rig-background rounded-xl p-4 border border-rig-border">
                     <h4 className="font-bold text-rig-text mb-2 tracking-wider uppercase text-xs">Customer Details</h4>
-                    <p className="text-rig-muted mb-1"><strong className="text-rig-text">Name:</strong> {viewOrderDetails.user.name}</p>
-                    <p className="text-rig-muted mb-1"><strong className="text-rig-text">Email:</strong> {viewOrderDetails.user.email}</p>
+                    <p className="text-rig-muted mb-1"><strong className="text-rig-text">Name:</strong> {viewOrderDetails.user?.name || viewOrderDetails.guestName || 'Guest'}</p>
+                    <p className="text-rig-muted mb-1"><strong className="text-rig-text">Email:</strong> {viewOrderDetails.user?.email || viewOrderDetails.guestEmail || 'N/A'}</p>
                     <p className="text-rig-muted"><strong className="text-rig-text">Phone:</strong> {viewOrderDetails.phone || 'N/A'}</p>
                   </div>
                   <div className="bg-rig-background rounded-xl p-4 border border-rig-border flex flex-col">
