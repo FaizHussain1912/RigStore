@@ -85,6 +85,14 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
       where: { cartId: cart.id }
     });
 
+    // Decrement stock
+    for (const item of cart.items) {
+      await prisma.inventory.updateMany({
+        where: { productId: item.productId },
+        data: { totalStock: { decrement: item.quantity } }
+      });
+    }
+
     res.status(201).json(order);
   } catch (error) {
     console.error('Checkout error:', error);
@@ -191,6 +199,14 @@ router.post('/guest-checkout', async (req, res) => {
         items: { include: { product: true } }
       }
     });
+
+    // Decrement stock
+    for (const item of items) {
+      await prisma.inventory.updateMany({
+        where: { productId: item.productId },
+        data: { totalStock: { decrement: item.quantity } }
+      });
+    }
 
     res.status(201).json(order);
   } catch (error) {
