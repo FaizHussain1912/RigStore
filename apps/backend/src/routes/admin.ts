@@ -11,24 +11,67 @@ router.use(requireAuth, requireAdmin);
 // Get Dashboard Stats
 router.get('/stats', async (req: AuthRequest, res) => {
   try {
-    const totalUsers = await prisma.user.count();
-    const totalOrders = await prisma.order.count();
-    const pendingOrders = await prisma.order.count({ where: { status: 'PENDING' } });
+    const { filter = 'ALL', year, month } = req.query as { filter?: string, year?: string, month?: string };
+
+    let dateFilter: any = undefined;
     
-    // Total Revenue
+    if (filter === 'YEARLY' && year) {
+      dateFilter = {
+        gte: new Date(`${year}-01-01T00:00:00.000Z`),
+        lte: new Date(`${year}-12-31T23:59:59.999Z`)
+      };
+    } else if (filter === 'MONTHLY' && year && month) {
+      // month is 1-12
+      const startDate = new Date(`${year}-${month.padStart(2, '0')}-01T00:00:00.000Z`);
+      const nextMonthDate = new Date(startDate);
+      nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
+      
+      dateFilter = {
+        gte: startDate,
+        lt: nextMonthDate
+      };
+    }
+
+    const baseWhere = dateFilter ? { createdAt: dateFilter } : {};
+
+    const totalUsers = await prisma.user.count({ where: baseWhere });
+    const totalOrders = await prisma.order.count({ where: baseWhere });
+    const pendingOrders = await prisma.order.count({ where: { ...baseWhere, status: 'PENDING' } });
+    
+    // Total Revenue and Profit
     const orders = await prisma.order.findMany({
-      where: { status: { notIn: ['CANCELLED'] } },
-      select: { totalAmount: true }
+      where: { ...baseWhere, status: { notIn: ['CANCELLED'] } },
+      select: { 
+        totalAmount: true,
+        items: {
+          select: {
+            quantity: true,
+            priceAtSale: true,
+            originalPriceAtSale: true
+          }
+        }
+      }
     });
-    const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+
+    let totalRevenue = 0;
+    let totalProfit = 0;
+
+    for (const order of orders) {
+      totalRevenue += order.totalAmount;
+      for (const item of order.items) {
+        totalProfit += (item.priceAtSale - item.originalPriceAtSale) * item.quantity;
+      }
+    }
 
     res.json({
       totalUsers,
       totalOrders,
       pendingOrders,
-      totalRevenue
+      totalRevenue,
+      totalProfit
     });
   } catch (error) {
+    console.error('Failed to fetch stats:', error);
     res.status(500).json({ error: 'Failed to fetch stats' });
   }
 });
@@ -170,7 +213,7 @@ router.get('/products', async (req: AuthRequest, res) => {
 router.post('/products', async (req: AuthRequest, res) => {
   try {
     const { 
-      name, sku, slug, brand, basePrice, categoryId, description, imageUrl, 
+      name, sku, slug, brand, basePrice, originalPrice, categoryId, description, imageUrl, 
       totalStock, specs, compatibility 
     } = req.body;
 
@@ -181,6 +224,7 @@ router.post('/products', async (req: AuthRequest, res) => {
         slug,
         brand,
         basePrice: parseFloat(basePrice),
+        originalPrice: parseFloat(originalPrice) || parseFloat(basePrice),
         categoryId,
         description,
         imageUrl,
@@ -210,7 +254,7 @@ router.put('/products/:id', async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
     const { 
-      name, sku, slug, brand, basePrice, categoryId, description, imageUrl, 
+      name, sku, slug, brand, basePrice, originalPrice, categoryId, description, imageUrl, 
       totalStock, specs, compatibility 
     } = req.body;
 
@@ -222,6 +266,7 @@ router.put('/products/:id', async (req: AuthRequest, res) => {
         slug,
         brand,
         basePrice: parseFloat(basePrice),
+        originalPrice: parseFloat(originalPrice) || parseFloat(basePrice),
         categoryId,
         description,
         imageUrl,

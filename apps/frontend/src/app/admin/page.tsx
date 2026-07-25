@@ -38,9 +38,13 @@ export default function AdminDashboard() {
   const [confirmDialog, setConfirmDialog] = useState<{isOpen: boolean, title: string, message: string, onConfirm: () => void} | null>(null);
   const [viewOrderDetails, setViewOrderDetails] = useState<any>(null);
   const [formData, setFormData] = useState({
-    name: '', sku: '', slug: '', brand: '', basePrice: 0, categoryId: '', 
+    name: '', sku: '', slug: '', brand: '', basePrice: 0, originalPrice: 0, categoryId: '', 
     description: '', imageUrl: '', totalStock: 0, specs: '{}', compatibility: '{}'
   });
+
+  const [statsFilterType, setStatsFilterType] = useState('ALL');
+  const [statsFilterYear, setStatsFilterYear] = useState(new Date().getFullYear().toString());
+  const [statsFilterMonth, setStatsFilterMonth] = useState((new Date().getMonth() + 1).toString());
   
   // User Management State
   const [editUserModalOpen, setEditUserModalOpen] = useState(false);
@@ -81,13 +85,21 @@ export default function AdminDashboard() {
     if (!token) return;
 
     fetchData();
-  }, [user, token, isAdmin, activeTab]);
+  }, [user, token, isAdmin, activeTab, statsFilterType, statsFilterYear, statsFilterMonth]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
       if (activeTab === 'OVERVIEW') {
-        const res = await fetch(`${API_URL}/api/admin/stats`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const queryParams = new URLSearchParams();
+        if (statsFilterType !== 'ALL') queryParams.append('filter', statsFilterType);
+        if (statsFilterType === 'YEARLY' || statsFilterType === 'MONTHLY') {
+          queryParams.append('year', statsFilterYear);
+        }
+        if (statsFilterType === 'MONTHLY') {
+          queryParams.append('month', statsFilterMonth);
+        }
+        const res = await fetch(`${API_URL}/api/admin/stats?${queryParams.toString()}`, { headers: { 'Authorization': `Bearer ${token}` } });
         if (res.ok) setStats(await res.json());
       } else if (activeTab === 'ORDERS') {
         const res = await fetch(`${API_URL}/api/admin/orders`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -484,6 +496,7 @@ export default function AdminDashboard() {
       slug: p.slug || '', 
       brand: p.brand || '', 
       basePrice: p.basePrice || 0, 
+      originalPrice: p.originalPrice || p.basePrice || 0,
       categoryId: p.categoryId || '',
       description: p.description || '', 
       imageUrl: p.imageUrl || '', 
@@ -497,7 +510,7 @@ export default function AdminDashboard() {
   const handleAddProduct = () => {
     setCurrentProduct(null);
     setFormData({
-      name: '', sku: '', slug: '', brand: '', basePrice: 0, categoryId: categories[0]?.id || '', 
+      name: '', sku: '', slug: '', brand: '', basePrice: 0, originalPrice: 0, categoryId: categories[0]?.id || '', 
       description: '', imageUrl: '', totalStock: 0, specs: '{}', compatibility: '{}'
     });
     setShowProductForm(true);
@@ -696,35 +709,89 @@ export default function AdminDashboard() {
           <>
             {/* OVERVIEW TAB */}
             {activeTab === 'OVERVIEW' && stats && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="glass-panel p-6 rounded-2xl">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 bg-blue-500/10 text-blue-400 rounded-xl"><DollarSign className="w-6 h-6" /></div>
-                    <span className="text-sm font-medium text-green-400 flex items-center"><TrendingUp className="w-4 h-4 mr-1" /> +12%</span>
-                  </div>
-                  <h3 className="text-rig-muted text-sm font-medium">Total Revenue</h3>
-                  <div className="text-3xl font-bold text-rig-text mt-1">{formatPrice(stats.totalRevenue)}</div>
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row gap-4 items-center bg-rig-surface p-4 rounded-2xl border border-rig-border">
+                  <span className="text-rig-text font-medium">Time Filter:</span>
+                  <select 
+                    value={statsFilterType} 
+                    onChange={e => setStatsFilterType(e.target.value)}
+                    className="bg-rig-background border border-rig-border rounded-lg px-4 py-2 text-rig-text outline-none focus:border-rig-primary transition-colors"
+                  >
+                    <option value="ALL">All Time</option>
+                    <option value="YEARLY">Yearly</option>
+                    <option value="MONTHLY">Monthly</option>
+                  </select>
+                  
+                  {(statsFilterType === 'YEARLY' || statsFilterType === 'MONTHLY') && (
+                    <select 
+                      value={statsFilterYear} 
+                      onChange={e => setStatsFilterYear(e.target.value)}
+                      className="bg-rig-background border border-rig-border rounded-lg px-4 py-2 text-rig-text outline-none focus:border-rig-primary transition-colors"
+                    >
+                      {[2026, 2027, 2028, 2029, 2030].map(y => (
+                        <option key={y} value={y}>{y}</option>
+                      ))}
+                    </select>
+                  )}
+
+                  {statsFilterType === 'MONTHLY' && (
+                    <select 
+                      value={statsFilterMonth} 
+                      onChange={e => setStatsFilterMonth(e.target.value)}
+                      className="bg-rig-background border border-rig-border rounded-lg px-4 py-2 text-rig-text outline-none focus:border-rig-primary transition-colors"
+                    >
+                      <option value="1">January</option>
+                      <option value="2">February</option>
+                      <option value="3">March</option>
+                      <option value="4">April</option>
+                      <option value="5">May</option>
+                      <option value="6">June</option>
+                      <option value="7">July</option>
+                      <option value="8">August</option>
+                      <option value="9">September</option>
+                      <option value="10">October</option>
+                      <option value="11">November</option>
+                      <option value="12">December</option>
+                    </select>
+                  )}
                 </div>
-                <div className="glass-panel p-6 rounded-2xl">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 bg-purple-500/10 text-purple-400 rounded-xl"><Package className="w-6 h-6" /></div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                  <div className="glass-panel p-6 rounded-2xl">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="p-3 bg-blue-500/10 text-blue-400 rounded-xl"><DollarSign className="w-6 h-6" /></div>
+                    </div>
+                    <h3 className="text-rig-muted text-sm font-medium">Total Revenue</h3>
+                    <div className="text-3xl font-bold text-rig-text mt-1">{formatPrice(stats.totalRevenue)}</div>
                   </div>
-                  <h3 className="text-rig-muted text-sm font-medium">Total Orders</h3>
-                  <div className="text-3xl font-bold text-rig-text mt-1">{stats.totalOrders}</div>
-                </div>
-                <div className="glass-panel p-6 rounded-2xl">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 bg-orange-500/10 text-orange-400 rounded-xl"><AlertCircle className="w-6 h-6" /></div>
+                  <div className="glass-panel p-6 rounded-2xl">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="p-3 bg-green-500/10 text-green-400 rounded-xl"><TrendingUp className="w-6 h-6" /></div>
+                    </div>
+                    <h3 className="text-rig-muted text-sm font-medium">Total Profit</h3>
+                    <div className="text-3xl font-bold text-rig-text mt-1">{formatPrice(stats.totalProfit || 0)}</div>
                   </div>
-                  <h3 className="text-rig-muted text-sm font-medium">Pending Orders</h3>
-                  <div className="text-3xl font-bold text-rig-text mt-1">{stats.pendingOrders}</div>
-                </div>
-                <div className="glass-panel p-6 rounded-2xl">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 bg-green-500/10 text-green-400 rounded-xl"><Users className="w-6 h-6" /></div>
+                  <div className="glass-panel p-6 rounded-2xl">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="p-3 bg-purple-500/10 text-purple-400 rounded-xl"><Package className="w-6 h-6" /></div>
+                    </div>
+                    <h3 className="text-rig-muted text-sm font-medium">Total Orders</h3>
+                    <div className="text-3xl font-bold text-rig-text mt-1">{stats.totalOrders}</div>
                   </div>
-                  <h3 className="text-rig-muted text-sm font-medium">Total Customers</h3>
-                  <div className="text-3xl font-bold text-rig-text mt-1">{stats.totalUsers}</div>
+                  <div className="glass-panel p-6 rounded-2xl">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="p-3 bg-orange-500/10 text-orange-400 rounded-xl"><AlertCircle className="w-6 h-6" /></div>
+                    </div>
+                    <h3 className="text-rig-muted text-sm font-medium">Pending Orders</h3>
+                    <div className="text-3xl font-bold text-rig-text mt-1">{stats.pendingOrders}</div>
+                  </div>
+                  <div className="glass-panel p-6 rounded-2xl">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="p-3 bg-cyan-500/10 text-cyan-400 rounded-xl"><Users className="w-6 h-6" /></div>
+                    </div>
+                    <h3 className="text-rig-muted text-sm font-medium">Total Customers</h3>
+                    <div className="text-3xl font-bold text-rig-text mt-1">{stats.totalUsers}</div>
+                  </div>
                 </div>
               </div>
             )}
@@ -1089,8 +1156,12 @@ export default function AdminDashboard() {
                           <input required value={formData.brand || ''} onChange={e => setFormData({...formData, brand: e.target.value})} className="w-full bg-rig-background border border-rig-border rounded-lg px-3 py-2 text-rig-text" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-sm font-medium text-rig-muted">Base Price (Rs.)</label>
+                          <label className="text-sm font-medium text-rig-muted">Store Price (Rs.)</label>
                           <input required type="number" step="0.01" value={formData.basePrice === 0 ? '0' : formData.basePrice || ''} onChange={e => setFormData({...formData, basePrice: parseFloat(e.target.value) || 0})} className="w-full bg-rig-background border border-rig-border rounded-lg px-3 py-2 text-rig-text" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-sm font-medium text-rig-muted">Original Price / Cost (Rs.)</label>
+                          <input required type="number" step="0.01" value={formData.originalPrice === 0 ? '0' : formData.originalPrice || ''} onChange={e => setFormData({...formData, originalPrice: parseFloat(e.target.value) || 0})} className="w-full bg-rig-background border border-rig-border rounded-lg px-3 py-2 text-rig-text" />
                         </div>
                         <div className="space-y-1">
                           <label className="text-sm font-medium text-rig-muted">Total Stock</label>
