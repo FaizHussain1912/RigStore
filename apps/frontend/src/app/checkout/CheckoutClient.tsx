@@ -30,16 +30,10 @@ export default function CheckoutClient({ shippingRate = 0 }: { shippingRate?: nu
   const [step, setStep] = useState<'DETAILS' | 'REVIEW'>('DETAILS');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
+  const [successOrderId, setSuccessOrderId] = useState<string | null>(null);
 
   const totalAmount = cart.reduce((sum, item) => sum + (item.basePrice * item.quantity), 0);
   const grandTotal = totalAmount + shippingRate;
-
-  useEffect(() => {
-    if (!user) {
-      router.push('/login');
-    }
-  }, [user, router]);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6767'}/api/settings/public`)
@@ -52,11 +46,7 @@ export default function CheckoutClient({ shippingRate = 0 }: { shippingRate?: nu
       .catch(console.error);
   }, []);
 
-  if (!user) {
-    return null;
-  }
-
-  if (cart.length === 0 && !success) {
+  if (cart.length === 0 && !successOrderId) {
     return (
       <main className="container-dense py-12 text-center">
         <h1 className="text-3xl font-bold mb-4">Checkout</h1>
@@ -76,16 +66,27 @@ export default function CheckoutClient({ shippingRate = 0 }: { shippingRate?: nu
     setError('');
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6767'}/api/orders/checkout`, {
+      const isGuest = !user;
+      const url = isGuest ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6767'}/api/orders/guest-checkout` : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6767'}/api/orders/checkout`;
+      
+      const payload = isGuest ? {
+        shippingAddress,
+        paymentMethod,
+        guestName: shippingAddress.fullName,
+        guestEmail: shippingAddress.email,
+        items: cart.map(i => ({ productId: i.productId || i.id, quantity: i.quantity }))
+      } : {
+        shippingAddress,
+        paymentMethod
+      };
+
+      const res = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
-        body: JSON.stringify({
-          shippingAddress,
-          paymentMethod
-        })
+        body: JSON.stringify(payload)
       });
 
       if (!res.ok) {
@@ -93,8 +94,9 @@ export default function CheckoutClient({ shippingRate = 0 }: { shippingRate?: nu
         throw new Error(data.error || 'Failed to process checkout');
       }
 
+      const data = await res.json();
       await clearCart();
-      setSuccess(true);
+      setSuccessOrderId(data.id);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -102,7 +104,7 @@ export default function CheckoutClient({ shippingRate = 0 }: { shippingRate?: nu
     }
   };
 
-  if (success) {
+  if (successOrderId) {
     return (
       <main className="min-h-[70vh] flex items-center justify-center p-4">
         <div className="glass-panel max-w-md w-full p-12 text-center rounded-2xl relative overflow-hidden">
@@ -113,16 +115,33 @@ export default function CheckoutClient({ shippingRate = 0 }: { shippingRate?: nu
           </div>
           
           <h1 className="text-3xl font-bold mb-4">Order Placed!</h1>
-          <p className="text-rig-muted mb-8">
+          <p className="text-rig-muted mb-4">
             Thank you for shopping at RigStore. Your order has been successfully placed and is being processed.
           </p>
+          <div className="bg-rig-background p-4 rounded-xl mb-8 border border-rig-border/50">
+            <p className="text-sm text-rig-muted mb-1">Your Order ID is:</p>
+            <p className="text-lg font-mono font-bold text-rig-text select-all">{successOrderId}</p>
+            {!user && (
+              <p className="text-xs text-orange-400 mt-2">Please save this Order ID to track or cancel your order later.</p>
+            )}
+          </div>
           
-          <button 
-            onClick={() => router.push('/orders')} 
-            className="w-full bg-rig-primary text-white font-semibold py-3 rounded-lg hover:bg-rig-primary-dark transition-colors"
-          >
-            View My Orders
-          </button>
+          <div className="flex flex-col gap-3">
+            {user && (
+              <button 
+                onClick={() => router.push('/orders')} 
+                className="w-full bg-rig-primary text-white font-semibold py-3 rounded-lg hover:bg-rig-primary-dark transition-colors"
+              >
+                View My Orders
+              </button>
+            )}
+            <button 
+              onClick={() => router.push('/track')} 
+              className={`w-full ${user ? 'bg-rig-surface border border-rig-border text-rig-text' : 'bg-rig-primary text-white'} font-semibold py-3 rounded-lg hover:bg-rig-background transition-colors`}
+            >
+              Track Order
+            </button>
+          </div>
         </div>
       </main>
     );

@@ -84,10 +84,10 @@ export default function Footer({ settings }: { settings?: any }) {
           <div>
             <h3 className="text-rig-text font-bold text-lg mb-6 tracking-tight">Account</h3>
             <ul className="space-y-3">
-              <li><Link href="/auth" className="text-rig-muted hover:text-rig-primary transition-colors">Sign In / Sign Up</Link></li>
-              <li><Link href="/checkout" className="text-rig-muted hover:text-rig-primary transition-colors">My Account</Link></li>
-              <li><Link href="/checkout" className="text-rig-muted hover:text-rig-primary transition-colors">Shopping Cart</Link></li>
-              <li><Link href="/checkout" className="text-rig-muted hover:text-rig-primary transition-colors">Order History</Link></li>
+              <li><Link href="/login" className="text-rig-muted hover:text-rig-primary transition-colors">Sign In / Sign Up</Link></li>
+              <li><Link href="/orders" className="text-rig-muted hover:text-rig-primary transition-colors">My Orders</Link></li>
+              <li><Link href="/track" className="text-rig-muted hover:text-rig-primary transition-colors">Track Order</Link></li>
+              <li><Link href="/checkout" className="text-rig-muted hover:text-rig-primary transition-colors">Checkout</Link></li>
             </ul>
           </div>
 

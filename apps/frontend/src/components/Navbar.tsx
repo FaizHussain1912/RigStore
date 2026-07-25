@@ -111,6 +111,7 @@ export default function Navbar({ customLinks = [], generalSettings = {} }: { cus
               </Link>
             ))}
 
+            <Link href="/track" className="font-medium text-sm text-rig-primary hover:text-rose-400 transition-colors">Track Order</Link>
             <Link href="/about" className="font-medium text-sm text-rig-muted hover:text-rig-text transition-colors">About Us</Link>
             <Link href="/contact" className="font-medium text-sm text-rig-muted hover:text-rig-text transition-colors">Contact</Link>
             
@@ -317,6 +318,7 @@ export default function Navbar({ customLinks = [], generalSettings = {} }: { cus
               <Link href="/deals" onClick={() => setIsMobileMenuOpen(false)} className="text-xl font-black text-rig-primary hover:text-rose-400 transition-colors">
                 🔥 PC Deals
               </Link>
+              <Link href="/track" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-bold text-rig-primary">Track Order</Link>
               
               {customLinks.map((link, idx) => (
                 <Link key={idx} href={link.url || '#'} onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-bold text-rig-text">
