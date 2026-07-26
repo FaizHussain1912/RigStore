@@ -4,8 +4,8 @@ import { Phone, MapPin } from 'lucide-react';
 
 export default function Topbar() {
   return (
-    <div className="w-full bg-[#111111] border-b border-rig-border text-xs text-rig-muted py-2 px-4 z-50 relative">
-      <div className="container-dense flex flex-col sm:flex-row justify-between items-center gap-2">
+    <div className="w-full bg-[#111111] border-b border-rig-border text-xs text-rig-muted py-2 px-4 sm:px-8 z-50 relative">
+      <div className="w-full flex flex-col sm:flex-row justify-between items-center gap-2">
         {/* Left Side Links */}
         <div className="flex items-center gap-4 font-medium">
           <Link href="/about" className="hover:text-rig-text transition-colors">

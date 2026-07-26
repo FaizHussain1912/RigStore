@@ -83,19 +83,19 @@ export default function Navbar({ customLinks = [], generalSettings = {} }: { cus
   };
 
   return (
-    <nav className="border-b border-rig-border bg-rig-surface px-4 z-40 relative">
-      <div className="container-dense flex justify-between items-center h-16">
-        <div className="flex items-center gap-4 lg:gap-8">
+    <nav className="border-b border-rig-border bg-rig-surface px-4 sm:px-8 z-40 relative">
+      <div className="w-full flex justify-between items-center h-16">
+        <div className="flex items-center gap-6 lg:gap-10">
           <button 
             className="lg:hidden p-2 text-rig-muted hover:text-rig-text focus:outline-none"
             onClick={() => setIsMobileMenuOpen(true)}
           >
             <Menu className="w-6 h-6" />
           </button>
-          <Link href="/" className="text-xl font-bold tracking-tighter text-rig-primary">
+          <Link href="/" className="text-2xl font-black tracking-tighter text-rig-primary">
             RIG<span className="text-rig-text">STORE</span>
           </Link>
-          <div className="hidden lg:flex gap-6 items-center">
+          <div className="hidden lg:flex gap-8 items-center">
             <MegaMenu />
             <Link href="/builder" prefetch={true} className="text-sm font-black text-rig-primary hover:text-rose-400 transition-colors">
               PC BUILDER
@@ -115,7 +115,7 @@ export default function Navbar({ customLinks = [], generalSettings = {} }: { cus
             <Link href="/about" className="font-medium text-sm text-rig-muted hover:text-rig-text transition-colors">About Us</Link>
             <Link href="/contact" className="font-medium text-sm text-rig-muted hover:text-rig-text transition-colors">Contact</Link>
             
-            <div className="hidden xl:flex items-center gap-4 ml-6 pl-6 border-l border-rig-border text-xs text-rig-muted">
+            <div className="hidden xl:flex items-center gap-6 ml-8 pl-8 border-l border-rig-border text-xs text-rig-muted">
               <div className="flex items-center gap-1.5 hover:text-rig-text transition-colors cursor-pointer">
                 <Phone size={14} className="text-rig-primary" />
                 <span>{generalSettings.navbarPhone || '0326-2147419'}</span>
