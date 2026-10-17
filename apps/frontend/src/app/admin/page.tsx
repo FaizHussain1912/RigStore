@@ -8,7 +8,7 @@ import { useTheme } from 'next-themes';
 import { useCurrency } from '../CurrencyContext';
 import LiveTrackingDashboard from './LiveTrackingDashboard';
 import SettingsDashboard from './SettingsDashboard';
-import { LayoutDashboard, Users, PackageSearch, Package, DollarSign, TrendingUp, AlertCircle, Plus, Edit, Trash2, Eye, Printer, Download, Search, Settings, Save, X, Filter, Box, ArrowUpRight, Copy } from 'lucide-react';
+import { LayoutDashboard, Users, PackageSearch, Package, DollarSign, TrendingUp, AlertCircle, Plus, Edit, Trash2, Eye, Printer, Download, Search, Settings, Save, X, Filter, Box, ArrowUpRight, Copy, FolderTree, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function AdminDashboard() {
@@ -41,6 +41,13 @@ export default function AdminDashboard() {
     name: '', sku: '', slug: '', brand: '', basePrice: 0, originalPrice: 0, categoryId: '', 
     description: '', imageUrl: '', totalStock: 0, specs: '{}', compatibility: '{}'
   });
+
+  // Category Management State
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [categoryFormData, setCategoryFormData] = useState({ name: '', slug: '', description: '', imageUrl: '' });
+  const [categorySearchTerm, setCategorySearchTerm] = useState('');
+  const [isSubmittingCategory, setIsSubmittingCategory] = useState(false);
 
   const [statsFilterType, setStatsFilterType] = useState('ALL');
   const [statsFilterYear, setStatsFilterYear] = useState(new Date().getFullYear().toString());
@@ -115,6 +122,9 @@ export default function AdminDashboard() {
       } else if (activeTab === 'PRODUCTS') {
         const res = await fetch(`${API_URL}/api/admin/products`, { headers: { 'Authorization': `Bearer ${token}` } });
         if (res.ok) setProducts(await res.json());
+        const catRes = await fetch(`${API_URL}/api/admin/categories`, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (catRes.ok) setCategories(await catRes.json());
+      } else if (activeTab === 'CATEGORIES') {
         const catRes = await fetch(`${API_URL}/api/admin/categories`, { headers: { 'Authorization': `Bearer ${token}` } });
         if (catRes.ok) setCategories(await catRes.json());
       } else if (activeTab === 'CUSTOMIZATION') {
@@ -668,6 +678,127 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleProductImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast('Image file size must be under 2MB', 'error');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setFormData(prev => ({ ...prev, imageUrl: reader.result as string }));
+        toast('Product image uploaded', 'success');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCategoryImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast('Image file size must be under 2MB', 'error');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setCategoryFormData(prev => ({ ...prev, imageUrl: reader.result as string }));
+        toast('Category image uploaded', 'success');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAddCategory = () => {
+    setEditingCategory(null);
+    setCategoryFormData({ name: '', slug: '', description: '', imageUrl: '' });
+    setShowCategoryModal(true);
+  };
+
+  const handleEditCategory = (cat: any) => {
+    setEditingCategory(cat);
+    setCategoryFormData({
+      name: cat.name || '',
+      slug: cat.slug || '',
+      description: cat.description || '',
+      imageUrl: cat.imageUrl || ''
+    });
+    setShowCategoryModal(true);
+  };
+
+  const handleSaveCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!categoryFormData.name.trim()) {
+      toast('Category name is required', 'error');
+      return;
+    }
+    setIsSubmittingCategory(true);
+    try {
+      const url = editingCategory
+        ? `${API_URL}/api/admin/categories/${editingCategory.id}`
+        : `${API_URL}/api/admin/categories`;
+      const method = editingCategory ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(categoryFormData)
+      });
+
+      if (res.ok) {
+        toast(editingCategory ? 'Category updated successfully' : 'Category created successfully', 'success');
+        setShowCategoryModal(false);
+        const catRes = await fetch(`${API_URL}/api/admin/categories`, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (catRes.ok) setCategories(await catRes.json());
+      } else {
+        const data = await res.json().catch(() => null);
+        toast(data?.error || 'Failed to save category', 'error');
+      }
+    } catch (err) {
+      toast('Network error saving category', 'error');
+    } finally {
+      setIsSubmittingCategory(false);
+    }
+  };
+
+  const handleDeleteCategory = (cat: any) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Category',
+      message: `Are you sure you want to delete category "${cat.name}"? If products belong to this category, it cannot be deleted.`,
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        try {
+          const res = await fetch(`${API_URL}/api/admin/categories/${cat.id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            setCategories(categories.filter(c => c.id !== cat.id));
+            toast('Category deleted successfully', 'success');
+          } else {
+            const data = await res.json().catch(() => null);
+            toast(data?.error || 'Failed to delete category', 'error');
+          }
+        } catch (error) {
+          console.error(error);
+          toast('Network error deleting category', 'error');
+        }
+      }
+    });
+  };
+
+  const filteredCategories = categories.filter(c => {
+    const term = categorySearchTerm.toLowerCase();
+    return !term || c.name.toLowerCase().includes(term) || c.slug.toLowerCase().includes(term);
+  });
+
   if (!isAdmin) return null;
 
   return (
@@ -689,6 +820,9 @@ export default function AdminDashboard() {
           </button>
           <button onClick={() => {handleTabChange('PRODUCTS'); setShowProductForm(false);}} className={`shrink-0 md:w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors font-medium ${activeTab === 'PRODUCTS' ? 'bg-rig-primary/10 text-rig-primary' : 'text-rig-muted hover:text-rig-text hover:bg-rig-background'}`}>
             <Package className="w-5 h-5" /> Products
+          </button>
+          <button onClick={() => handleTabChange('CATEGORIES')} className={`shrink-0 md:w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors font-medium ${activeTab === 'CATEGORIES' ? 'bg-rig-primary/10 text-rig-primary' : 'text-rig-muted hover:text-rig-text hover:bg-rig-background'}`}>
+            <FolderTree className="w-5 h-5" /> Categories
           </button>
           <button onClick={() => handleTabChange('USERS')} className={`shrink-0 md:w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors font-medium ${activeTab === 'USERS' ? 'bg-rig-primary/10 text-rig-primary' : 'text-rig-muted hover:text-rig-text hover:bg-rig-background'}`}>
             <Users className="w-5 h-5" /> Customers
@@ -1177,8 +1311,43 @@ export default function AdminDashboard() {
                           </select>
                         </div>
                         <div className="space-y-1">
-                          <label className="text-sm font-medium text-rig-muted">Image URL (Optional)</label>
-                          <input value={formData.imageUrl || ''} onChange={e => setFormData({...formData, imageUrl: e.target.value})} className="w-full bg-rig-background border border-rig-border rounded-lg px-3 py-2 text-rig-text" />
+                          <label className="text-sm font-medium text-rig-muted">Product Image (URL or Upload)</label>
+                          <div className="flex flex-col gap-2">
+                            <div className="flex gap-2">
+                              <input 
+                                placeholder="Enter Image URL or choose file below..."
+                                value={formData.imageUrl || ''} 
+                                onChange={e => setFormData({...formData, imageUrl: e.target.value})} 
+                                className="w-full bg-rig-background border border-rig-border rounded-lg px-3 py-2 text-rig-text text-sm outline-none focus:border-rig-primary" 
+                              />
+                              {formData.imageUrl && (
+                                <button 
+                                  type="button" 
+                                  onClick={() => setFormData({ ...formData, imageUrl: '' })}
+                                  className="px-3 py-1 text-xs bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors shrink-0"
+                                >
+                                  Clear
+                                </button>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <label className="cursor-pointer bg-rig-surface border border-dashed border-rig-border hover:border-rig-primary px-3 py-1.5 rounded-lg text-xs font-semibold text-rig-muted hover:text-rig-text transition-colors flex items-center gap-2">
+                                <Upload size={14} /> Upload Image (PNG/JPG/WebP)
+                                <input 
+                                  type="file" 
+                                  accept="image/*" 
+                                  onChange={handleProductImageUpload} 
+                                  className="hidden" 
+                                />
+                              </label>
+                              {formData.imageUrl && (
+                                <div className="flex items-center gap-2">
+                                  <img src={formData.imageUrl} alt="Preview" className="w-8 h-8 object-contain rounded border border-rig-border bg-black/20" />
+                                  <span className="text-xs text-green-500 font-medium">Image attached</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
                       
@@ -1208,7 +1377,97 @@ export default function AdminDashboard() {
               </div>
             )}
 
+            {/* CATEGORIES TAB */}
+            {activeTab === 'CATEGORIES' && (
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                  <div className="relative w-full sm:w-72">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-rig-muted w-4 h-4" />
+                    <input 
+                      type="text" 
+                      placeholder="Search categories..." 
+                      value={categorySearchTerm}
+                      onChange={e => setCategorySearchTerm(e.target.value)}
+                      className="bg-rig-background border border-rig-border rounded-xl pl-9 pr-4 py-2 text-sm text-rig-text w-full outline-none focus:border-rig-primary transition-colors"
+                    />
+                  </div>
+                  <button 
+                    onClick={handleAddCategory}
+                    className="bg-rig-primary hover:bg-rig-primary/90 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-colors shrink-0 text-sm shadow-sm"
+                  >
+                    <Plus size={18} /> Add Category
+                  </button>
+                </div>
 
+                <div className="glass-panel rounded-2xl overflow-hidden border border-rig-border">
+                  <table className="w-full text-left">
+                    <thead className="bg-rig-background/80 border-b border-rig-border">
+                      <tr>
+                        <th className="p-4 font-semibold text-rig-muted text-xs uppercase tracking-wider">Category</th>
+                        <th className="p-4 font-semibold text-rig-muted text-xs uppercase tracking-wider">Slug</th>
+                        <th className="p-4 font-semibold text-rig-muted text-xs uppercase tracking-wider">Description</th>
+                        <th className="p-4 font-semibold text-rig-muted text-xs uppercase tracking-wider text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-rig-border/50 text-sm">
+                      {filteredCategories.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="p-8 text-center text-rig-muted">
+                            No categories found matching your search.
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredCategories.map(cat => (
+                          <tr key={cat.id} className="hover:bg-rig-background/50 transition-colors">
+                            <td className="p-4">
+                              <div className="flex items-center gap-3">
+                                {cat.imageUrl ? (
+                                  <img src={cat.imageUrl} alt={cat.name} className="w-10 h-10 object-contain rounded-lg border border-rig-border bg-black/20 shrink-0" />
+                                ) : (
+                                  <div className="w-10 h-10 rounded-lg bg-rig-primary/10 text-rig-primary flex items-center justify-center font-bold text-sm shrink-0 border border-rig-primary/20">
+                                    <FolderTree className="w-5 h-5" />
+                                  </div>
+                                )}
+                                <div>
+                                  <div className="font-bold text-rig-text">{cat.name}</div>
+                                  <div className="text-xs text-rig-muted">ID: {cat.id?.slice(0, 8)}...</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <span className="bg-rig-background px-2.5 py-1 rounded-md text-xs font-mono text-rig-muted border border-rig-border">
+                                /category/{cat.slug}
+                              </span>
+                            </td>
+                            <td className="p-4 text-rig-muted text-xs max-w-xs truncate">
+                              {cat.description || 'No description provided'}
+                            </td>
+                            <td className="p-4 text-right">
+                              <div className="flex justify-end gap-2">
+                                <button 
+                                  onClick={() => handleEditCategory(cat)} 
+                                  className="p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 transition-colors"
+                                  title="Edit Category"
+                                >
+                                  <Edit size={16} />
+                                </button>
+                                <button 
+                                  onClick={() => handleDeleteCategory(cat)} 
+                                  className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
+                                  title="Delete Category"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             {/* CUSTOMIZATION TAB */}
             {activeTab === 'CUSTOMIZATION' && (
@@ -1996,6 +2255,124 @@ export default function AdminDashboard() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Category Add/Edit Modal */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-rig-surface border border-rig-border rounded-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6 border-b border-rig-border pb-4">
+                <h3 className="text-xl font-bold text-rig-text">
+                  {editingCategory ? 'Edit Category' : 'Add New Category'}
+                </h3>
+                <button 
+                  onClick={() => setShowCategoryModal(false)}
+                  className="text-rig-muted hover:text-rig-text transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveCategory} className="space-y-4">
+                <div>
+                  <label className="text-sm font-bold text-rig-muted block mb-1">Category Name *</label>
+                  <input 
+                    required
+                    type="text" 
+                    placeholder="e.g. Mechanical Keyboards"
+                    value={categoryFormData.name}
+                    onChange={(e) => {
+                      const name = e.target.value;
+                      setCategoryFormData(prev => ({
+                        ...prev,
+                        name,
+                        slug: !editingCategory ? name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-') : prev.slug
+                      }));
+                    }}
+                    className="w-full bg-rig-background border border-rig-border rounded-xl px-4 py-2.5 text-rig-text focus:outline-none focus:border-rig-primary transition-colors text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-bold text-rig-muted block mb-1">URL Slug</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. mechanical-keyboards"
+                    value={categoryFormData.slug}
+                    onChange={(e) => setCategoryFormData({ ...categoryFormData, slug: e.target.value.toLowerCase().trim().replace(/[^a-z0-9-]+/g, '-') })}
+                    className="w-full bg-rig-background border border-rig-border rounded-xl px-4 py-2.5 text-rig-text focus:outline-none focus:border-rig-primary transition-colors font-mono text-sm"
+                  />
+                  <p className="text-xs text-rig-muted mt-1">URL: /category/{categoryFormData.slug || 'slug'}</p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-bold text-rig-muted block mb-1">Description (Optional)</label>
+                  <textarea 
+                    rows={3}
+                    placeholder="Short description for category..."
+                    value={categoryFormData.description}
+                    onChange={(e) => setCategoryFormData({ ...categoryFormData, description: e.target.value })}
+                    className="w-full bg-rig-background border border-rig-border rounded-xl px-4 py-2.5 text-rig-text focus:outline-none focus:border-rig-primary transition-colors text-sm resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-bold text-rig-muted block mb-1">Category Icon / Image</label>
+                  <div className="flex flex-col gap-2">
+                    <input 
+                      type="text" 
+                      placeholder="Image URL or upload below..."
+                      value={categoryFormData.imageUrl}
+                      onChange={(e) => setCategoryFormData({ ...categoryFormData, imageUrl: e.target.value })}
+                      className="w-full bg-rig-background border border-rig-border rounded-xl px-4 py-2.5 text-rig-text focus:outline-none focus:border-rig-primary transition-colors text-sm"
+                    />
+                    <div className="flex items-center gap-3">
+                      <label className="cursor-pointer bg-rig-background border border-dashed border-rig-border hover:border-rig-primary px-3 py-1.5 rounded-lg text-xs font-semibold text-rig-muted hover:text-rig-text transition-colors flex items-center gap-2">
+                        <Upload size={14} /> Upload Image (PNG/JPG/WebP)
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={handleCategoryImageUpload} 
+                          className="hidden" 
+                        />
+                      </label>
+                      {categoryFormData.imageUrl && (
+                        <div className="flex items-center gap-2">
+                          <img src={categoryFormData.imageUrl} alt="Category" className="w-8 h-8 object-contain rounded border border-rig-border bg-black/20" />
+                          <button 
+                            type="button" 
+                            onClick={() => setCategoryFormData({ ...categoryFormData, imageUrl: '' })}
+                            className="text-xs text-red-500 hover:underline"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-rig-border flex justify-end gap-3">
+                  <button 
+                    type="button"
+                    onClick={() => setShowCategoryModal(false)}
+                    className="px-4 py-2 rounded-lg font-medium text-rig-muted hover:text-rig-text hover:bg-rig-background transition-colors text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={isSubmittingCategory}
+                    className="px-6 py-2 bg-rig-primary hover:bg-rig-primary/90 disabled:opacity-50 text-white rounded-lg font-bold transition-colors text-sm"
+                  >
+                    {isSubmittingCategory ? 'Saving...' : 'Save Category'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

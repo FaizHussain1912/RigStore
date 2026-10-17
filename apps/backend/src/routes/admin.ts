@@ -404,4 +404,199 @@ router.delete('/users/:id', async (req: AuthRequest, res) => {
   }
 });
 
+// --- CATEGORY CRUD ROUTES ---
+
+// Create Category
+router.post('/categories', async (req: AuthRequest, res) => {
+  try {
+    const { name, slug } = req.body;
+    if (!name || !slug) {
+      return res.status(400).json({ error: 'Category name and slug are required' });
+    }
+
+    const cleanSlug = slug.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+    const existing = await prisma.category.findUnique({ where: { slug: cleanSlug } });
+    if (existing) {
+      return res.status(400).json({ error: 'Category with this slug already exists' });
+    }
+
+    const category = await prisma.category.create({
+      data: { name: name.trim(), slug: cleanSlug }
+    });
+
+    res.status(201).json(category);
+  } catch (error: any) {
+    console.error('Create category error:', error);
+    res.status(500).json({ error: 'Failed to create category' });
+  }
+});
+
+// Update Category
+router.put('/categories/:id', async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+    const { name, slug } = req.body;
+    
+    const cleanSlug = slug ? slug.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-') : undefined;
+
+    const category = await prisma.category.update({
+      where: { id },
+      data: {
+        ...(name ? { name: name.trim() } : {}),
+        ...(cleanSlug ? { slug: cleanSlug } : {})
+      }
+    });
+
+    res.json(category);
+  } catch (error: any) {
+    console.error('Update category error:', error);
+    res.status(500).json({ error: 'Failed to update category' });
+  }
+});
+
+// Delete Category
+router.delete('/categories/:id', async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Check if products exist in category
+    const productsCount = await prisma.product.count({ where: { categoryId: id } });
+    if (productsCount > 0) {
+      return res.status(400).json({ 
+        error: `Cannot delete category because it contains ${productsCount} product(s). Please reassign or delete those products first.` 
+      });
+    }
+
+    await prisma.category.delete({ where: { id } });
+    res.json({ success: true, message: 'Category deleted successfully' });
+  } catch (error: any) {
+    console.error('Delete category error:', error);
+    res.status(500).json({ error: 'Failed to delete category' });
+  }
+});
+
+// --- COUPONS MANAGEMENT ROUTES ---
+
+// Get all coupons
+router.get('/coupons', async (req: AuthRequest, res) => {
+  try {
+    const coupons = await prisma.coupon.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(coupons);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch coupons' });
+  }
+});
+
+// Create a coupon
+router.post('/coupons', async (req: AuthRequest, res) => {
+  try {
+    const { code, discountType, discountValue, minOrderAmount, maxDiscount, expiresAt, isActive } = req.body;
+    if (!code || !discountValue) {
+      return res.status(400).json({ error: 'Code and discount value are required' });
+    }
+
+    const cleanCode = String(code).trim().toUpperCase();
+    const existing = await prisma.coupon.findUnique({ where: { code: cleanCode } });
+    if (existing) {
+      return res.status(400).json({ error: 'Coupon code already exists' });
+    }
+
+    const coupon = await prisma.coupon.create({
+      data: {
+        code: cleanCode,
+        discountType: discountType || 'PERCENTAGE',
+        discountValue: parseFloat(discountValue),
+        minOrderAmount: parseFloat(minOrderAmount) || 0,
+        maxDiscount: maxDiscount ? parseFloat(maxDiscount) : null,
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
+        isActive: isActive !== false
+      }
+    });
+
+    res.status(201).json(coupon);
+  } catch (error: any) {
+    console.error('Create coupon error:', error);
+    res.status(500).json({ error: 'Failed to create coupon' });
+  }
+});
+
+// Delete a coupon
+router.delete('/coupons/:id', async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.coupon.delete({ where: { id } });
+    res.json({ success: true, message: 'Coupon deleted' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete coupon' });
+  }
+});
+
+// --- REVIEWS MANAGEMENT ---
+
+// Get all reviews
+router.get('/reviews', async (req: AuthRequest, res) => {
+  try {
+    const reviews = await prisma.review.findMany({
+      include: {
+        product: { select: { name: true, sku: true, imageUrl: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(reviews);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch reviews' });
+  }
+});
+
+// Delete a review
+router.delete('/reviews/:id', async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.review.delete({ where: { id } });
+    res.json({ success: true, message: 'Review deleted' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete review' });
+  }
+});
+
+// --- CONTACT MESSAGES MANAGEMENT ---
+
+// Get all messages
+router.get('/messages', async (req: AuthRequest, res) => {
+  try {
+    const messages = await prisma.contactMessage.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
+// Update message status
+router.patch('/messages/:id/status', async (req: AuthRequest, res) => {
+  try {
+    const { status } = req.body;
+    const msg = await prisma.contactMessage.update({
+      where: { id: req.params.id },
+      data: { status }
+    });
+    res.json(msg);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update message status' });
+  }
+});
+
+// Delete message
+router.delete('/messages/:id', async (req: AuthRequest, res) => {
+  try {
+    await prisma.contactMessage.delete({ where: { id: req.params.id } });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete message' });
+  }
+});
+
 export default router;

@@ -39,25 +39,30 @@ export default async function CategoryPage(props: {
   
   if (!products || products.length === 0) {
     return (
-      <main className="container-dense py-12 text-center">
-        <h1 className="text-3xl font-bold mb-4">Category Not Found</h1>
-        <p className="text-rig-muted">We could not find any products in this category.</p>
-        <div className="mt-8 p-4 bg-red-100 text-red-900 rounded text-left overflow-auto text-sm">
-          <strong>Debug Info:</strong><br />
-          URL Fetched: {result?.url}<br />
-          Error: {result?.error || 'No error, just empty array'}
-        </div>
+      <main className="container-dense py-16 text-center">
+        <h1 className="text-3xl font-bold mb-4 text-rig-text">No Products Found</h1>
+        <p className="text-rig-muted max-w-md mx-auto mb-8">
+          We could not find any products in this category at this time. Check back soon or explore other components.
+        </p>
+        <a href="/" className="bg-rig-primary text-white font-semibold px-6 py-3 rounded-xl hover:bg-rig-primary/90 transition-colors">
+          Browse All Categories
+        </a>
       </main>
     );
   }
 
-  const categoryName = products[0].category.name;
+  const isAll = params.slug.toLowerCase() === 'all';
+  const categoryName = isAll ? 'All Hardware Components' : (products[0]?.category?.name || 'Hardware');
 
   return (
     <main className="container-dense py-8">
       <div className="mb-8 border-b border-rig-border pb-4">
         <h1 className="text-4xl font-black text-rig-text tracking-tight">{categoryName}</h1>
-        <p className="text-rig-muted mt-2">Browse our extensive collection of high-performance {categoryName.toLowerCase()}.</p>
+        <p className="text-rig-muted mt-2">
+          {isAll 
+            ? 'Browse our complete catalog of high-performance PC components, gaming rigs, and accessories.' 
+            : `Browse our extensive collection of high-performance ${categoryName.toLowerCase()}.`}
+        </p>
       </div>
 
       <CategoryClient products={products} categoryName={categoryName} />

@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { Store, Truck, MapPin, Tag, CreditCard, Mail, Bell, Shield, MessageSquare, BarChart } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Store, Truck, MapPin, Tag, CreditCard, Mail, Bell, Shield, MessageSquare, BarChart, Plus, Trash2, CheckCircle2, AlertCircle, RefreshCw, X } from 'lucide-react';
+import { useAuth } from '../AuthContext';
+import { useToast } from '../ToastContext';
 
 interface SettingsDashboardProps {
   siteSettings: any;
@@ -9,11 +11,29 @@ interface SettingsDashboardProps {
 }
 
 export default function SettingsDashboard({ siteSettings, updateSetting, handleSaveSettings, savingSettings }: SettingsDashboardProps) {
+  const { token } = useAuth();
+  const { toast } = useToast();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6767';
+
   const [activeTab, setActiveTab] = useState('General');
   const [isAddingCity, setIsAddingCity] = useState(false);
   const [newCityName, setNewCityName] = useState('');
   const [addingAreaToCityIndex, setAddingAreaToCityIndex] = useState<number | null>(null);
   const [newAreaName, setNewAreaName] = useState('');
+
+  // Coupons State
+  const [coupons, setCoupons] = useState<any[]>([]);
+  const [loadingCoupons, setLoadingCoupons] = useState(false);
+  const [showAddCoupon, setShowAddCoupon] = useState(false);
+  const [submittingCoupon, setSubmittingCoupon] = useState(false);
+  const [newCoupon, setNewCoupon] = useState({
+    code: '',
+    discountType: 'PERCENTAGE',
+    discountValue: 10,
+    minOrderAmount: 0,
+    maxDiscount: '',
+    expiresAt: ''
+  });
 
   const tabs = [
     { name: 'General', icon: Store },
@@ -21,17 +41,21 @@ export default function SettingsDashboard({ siteSettings, updateSetting, handleS
     { name: 'Delivery Areas', icon: MapPin },
     { name: 'Coupons & Discounts', icon: Tag },
     { name: 'Payments', icon: CreditCard },
+    { name: 'AI Chatbot', icon: MessageSquare },
     { name: 'Emails & Marketing', icon: Mail },
     { name: 'Notifications', icon: Bell },
     { name: 'Security', icon: Shield },
-    { name: 'AI Chatbot', icon: MessageSquare },
     { name: 'Stats Strip', icon: BarChart },
   ];
 
   const generalSettings = siteSettings?.GENERAL_SETTINGS || {};
-
   const updateGeneralSetting = (field: string, value: any) => {
     updateSetting('GENERAL_SETTINGS', field, value);
+  };
+
+  const paymentSettings = siteSettings?.PAYMENT_SETTINGS || {};
+  const updatePaymentSetting = (field: string, value: any) => {
+    updateSetting('PAYMENT_SETTINGS', field, value);
   };
 
   const aiSettings = siteSettings?.AI_CHATBOT_SETTINGS || {};
@@ -40,6 +64,94 @@ export default function SettingsDashboard({ siteSettings, updateSetting, handleS
   };
 
   const deliveryAreas = siteSettings?.DELIVERY_AREAS_SETTINGS || [];
+
+  // Fetch Coupons when tab is opened
+  useEffect(() => {
+    if (activeTab === 'Coupons & Discounts' && token) {
+      fetchCoupons();
+    }
+  }, [activeTab, token]);
+
+  const fetchCoupons = async () => {
+    setLoadingCoupons(true);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/coupons`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setCoupons(await res.json());
+      }
+    } catch (err) {
+      console.error('Fetch coupons error:', err);
+    } finally {
+      setLoadingCoupons(false);
+    }
+  };
+
+  const handleCreateCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCoupon.code.trim()) {
+      toast('Coupon code is required', 'error');
+      return;
+    }
+    setSubmittingCoupon(true);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/coupons`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          code: newCoupon.code.trim().toUpperCase(),
+          discountType: newCoupon.discountType,
+          discountValue: parseFloat(String(newCoupon.discountValue)) || 0,
+          minOrderAmount: parseFloat(String(newCoupon.minOrderAmount)) || 0,
+          maxDiscount: newCoupon.maxDiscount ? parseFloat(String(newCoupon.maxDiscount)) : null,
+          expiresAt: newCoupon.expiresAt ? new Date(newCoupon.expiresAt).toISOString() : null
+        })
+      });
+
+      if (res.ok) {
+        toast('Coupon created successfully!', 'success');
+        setShowAddCoupon(false);
+        setNewCoupon({
+          code: '',
+          discountType: 'PERCENTAGE',
+          discountValue: 10,
+          minOrderAmount: 0,
+          maxDiscount: '',
+          expiresAt: ''
+        });
+        fetchCoupons();
+      } else {
+        const data = await res.json().catch(() => null);
+        toast(data?.error || 'Failed to create coupon', 'error');
+      }
+    } catch (err) {
+      toast('Network error creating coupon', 'error');
+    } finally {
+      setSubmittingCoupon(false);
+    }
+  };
+
+  const handleDeleteCoupon = async (id: string, code: string) => {
+    if (!confirm(`Are you sure you want to delete coupon "${code}"?`)) return;
+    try {
+      const res = await fetch(`${API_URL}/api/admin/coupons/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        toast(`Coupon ${code} deleted`, 'success');
+        setCoupons(coupons.filter(c => c.id !== id));
+      } else {
+        toast('Failed to delete coupon', 'error');
+      }
+    } catch (err) {
+      toast('Error deleting coupon', 'error');
+    }
+  };
   
   const handleAddCitySubmit = () => {
     if (newCityName.trim()) {
@@ -76,7 +188,7 @@ export default function SettingsDashboard({ siteSettings, updateSetting, handleS
     <div className="w-full bg-rig-surface text-rig-text rounded-2xl flex flex-col md:flex-row font-sans min-h-[700px]">
       
       {/* Sidebar */}
-      <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-rig-border p-4 flex flex-row md:flex-col gap-2 overflow-x-auto hide-scroll-on-desktop md:overflow-visible">
+      <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-rig-border p-4 flex flex-row md:flex-col gap-2 overflow-x-auto hide-scroll-on-desktop md:overflow-visible shrink-0">
         {tabs.map((tab) => (
           <button
             key={tab.name}
@@ -99,7 +211,7 @@ export default function SettingsDashboard({ siteSettings, updateSetting, handleS
           
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-rig-text">{activeTab}</h2>
-            <p className="text-sm text-rig-muted mt-1">Manage your store preferences and integrations</p>
+            <p className="text-sm text-rig-muted mt-1">Manage your store preferences, marketing promotions, and checkout configurations.</p>
           </div>
 
           {activeTab === 'General' ? (
@@ -165,23 +277,13 @@ export default function SettingsDashboard({ siteSettings, updateSetting, handleS
                 </div>
               </div>
 
-              {/* Global Promos & Settings */}
-              <div>
-                <h3 className="text-lg font-bold text-rig-text mb-6 border-b border-rig-border pb-2">Global Promos & Settings</h3>
-                <div className="p-6 border-2 border-dashed border-rig-border rounded-xl text-center text-rig-muted font-medium text-sm">
-                  Promo settings have been moved to the Customizations tab.
-                </div>
-              </div>
-
-
-
             </div>
           ) : activeTab === 'Shipping & Delivery' ? (
              <div className="bg-rig-background border border-rig-border rounded-2xl p-4 sm:p-8 shadow-sm">
                 <h3 className="text-lg font-bold text-rig-text mb-6 border-b border-rig-border pb-2">Shipping Configuration</h3>
                 <div className="space-y-6 max-w-xl">
                   <div className="space-y-2">
-                    <label className="text-sm font-bold text-rig-muted block">Flat Shipping Rate</label>
+                    <label className="text-sm font-bold text-rig-muted block">Flat Shipping Rate (Rs.)</label>
                     <input 
                       type="number"
                       value={generalSettings.shippingRate || 0}
@@ -193,6 +295,268 @@ export default function SettingsDashboard({ siteSettings, updateSetting, handleS
                   </div>
                 </div>
              </div>
+          ) : activeTab === 'Coupons & Discounts' ? (
+            <div className="space-y-6 bg-rig-background border border-rig-border rounded-2xl p-4 sm:p-8 shadow-sm">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-rig-border pb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-rig-text">Discount Codes & Coupons</h3>
+                  <p className="text-xs text-rig-muted mt-0.5">Manage active promo codes available for customers at checkout</p>
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={fetchCoupons} 
+                    className="p-2 bg-rig-surface border border-rig-border hover:border-rig-primary rounded-xl text-rig-muted hover:text-rig-text transition-colors"
+                    title="Refresh coupons"
+                  >
+                    <RefreshCw size={16} className={loadingCoupons ? "animate-spin" : ""} />
+                  </button>
+                  <button 
+                    onClick={() => setShowAddCoupon(!showAddCoupon)}
+                    className="bg-rig-primary hover:bg-rig-primary/90 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-colors text-sm shadow-sm"
+                  >
+                    <Plus size={16} /> Create Coupon
+                  </button>
+                </div>
+              </div>
+
+              {/* Add Coupon Form */}
+              {showAddCoupon && (
+                <form onSubmit={handleCreateCoupon} className="bg-rig-surface border border-rig-border p-6 rounded-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="flex justify-between items-center border-b border-rig-border pb-3">
+                    <h4 className="font-bold text-rig-text text-sm uppercase tracking-wider">New Coupon Setup</h4>
+                    <button type="button" onClick={() => setShowAddCoupon(false)} className="text-rig-muted hover:text-rig-text">
+                      <X size={18} />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-rig-muted">Coupon Code *</label>
+                      <input 
+                        required
+                        placeholder="e.g. SUMMER25"
+                        value={newCoupon.code}
+                        onChange={e => setNewCoupon({ ...newCoupon, code: e.target.value.toUpperCase() })}
+                        className="w-full bg-rig-background border border-rig-border rounded-xl px-3 py-2 text-sm text-rig-text font-mono font-bold outline-none focus:border-rig-primary"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-rig-muted">Discount Type</label>
+                      <select 
+                        value={newCoupon.discountType}
+                        onChange={e => setNewCoupon({ ...newCoupon, discountType: e.target.value })}
+                        className="w-full bg-rig-background border border-rig-border rounded-xl px-3 py-2 text-sm text-rig-text outline-none focus:border-rig-primary"
+                      >
+                        <option value="PERCENTAGE">Percentage (%) Off</option>
+                        <option value="FIXED">Fixed Amount (Rs.) Off</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-rig-muted">
+                        Discount Value {newCoupon.discountType === 'PERCENTAGE' ? '(%)' : '(Rs.)'} *
+                      </label>
+                      <input 
+                        required
+                        type="number"
+                        step="0.01"
+                        placeholder={newCoupon.discountType === 'PERCENTAGE' ? '10' : '500'}
+                        value={newCoupon.discountValue}
+                        onChange={e => setNewCoupon({ ...newCoupon, discountValue: parseFloat(e.target.value) || 0 })}
+                        className="w-full bg-rig-background border border-rig-border rounded-xl px-3 py-2 text-sm text-rig-text outline-none focus:border-rig-primary"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-rig-muted">Min Order Amount (Rs.)</label>
+                      <input 
+                        type="number"
+                        placeholder="0 for none"
+                        value={newCoupon.minOrderAmount}
+                        onChange={e => setNewCoupon({ ...newCoupon, minOrderAmount: parseFloat(e.target.value) || 0 })}
+                        className="w-full bg-rig-background border border-rig-border rounded-xl px-3 py-2 text-sm text-rig-text outline-none focus:border-rig-primary"
+                      />
+                    </div>
+                    {newCoupon.discountType === 'PERCENTAGE' && (
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-rig-muted">Max Discount Cap (Rs., optional)</label>
+                        <input 
+                          type="number"
+                          placeholder="e.g. 2000"
+                          value={newCoupon.maxDiscount}
+                          onChange={e => setNewCoupon({ ...newCoupon, maxDiscount: e.target.value })}
+                          className="w-full bg-rig-background border border-rig-border rounded-xl px-3 py-2 text-sm text-rig-text outline-none focus:border-rig-primary"
+                        />
+                      </div>
+                    )}
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-rig-muted">Expiry Date (optional)</label>
+                      <input 
+                        type="date"
+                        value={newCoupon.expiresAt}
+                        onChange={e => setNewCoupon({ ...newCoupon, expiresAt: e.target.value })}
+                        className="w-full bg-rig-background border border-rig-border rounded-xl px-3 py-2 text-sm text-rig-text outline-none focus:border-rig-primary"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button 
+                      type="button" 
+                      onClick={() => setShowAddCoupon(false)} 
+                      className="px-4 py-2 text-xs font-medium text-rig-muted hover:text-rig-text"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit" 
+                      disabled={submittingCoupon}
+                      className="bg-rig-primary hover:bg-rig-primary/90 text-white px-5 py-2 rounded-xl text-xs font-bold disabled:opacity-50 transition-colors"
+                    >
+                      {submittingCoupon ? 'Saving...' : 'Add Coupon'}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Coupons List */}
+              {loadingCoupons ? (
+                <div className="flex justify-center py-12">
+                  <div className="w-6 h-6 border-2 border-rig-primary border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : coupons.length === 0 ? (
+                <div className="text-center py-10 border-2 border-dashed border-rig-border rounded-xl text-rig-muted">
+                  <Tag className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                  <p className="font-semibold text-sm">No coupons found</p>
+                  <p className="text-xs mt-1">Create your first coupon using the button above.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-rig-border">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-rig-surface border-b border-rig-border">
+                      <tr>
+                        <th className="p-3 text-xs uppercase font-bold text-rig-muted">Code</th>
+                        <th className="p-3 text-xs uppercase font-bold text-rig-muted">Discount</th>
+                        <th className="p-3 text-xs uppercase font-bold text-rig-muted">Min Order</th>
+                        <th className="p-3 text-xs uppercase font-bold text-rig-muted">Expiry</th>
+                        <th className="p-3 text-xs uppercase font-bold text-rig-muted text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-rig-border/50">
+                      {coupons.map((coupon) => (
+                        <tr key={coupon.id} className="hover:bg-rig-surface/40 transition-colors">
+                          <td className="p-3">
+                            <span className="font-mono font-bold bg-rig-primary/10 text-rig-primary border border-rig-primary/20 px-2.5 py-1 rounded-md text-xs">
+                              {coupon.code}
+                            </span>
+                          </td>
+                          <td className="p-3 font-semibold text-rig-text">
+                            {coupon.discountType === 'PERCENTAGE'
+                              ? `${coupon.discountValue}% OFF`
+                              : `Rs. ${coupon.discountValue.toLocaleString()} FLAT`}
+                            {coupon.maxDiscount && (
+                              <span className="block text-[11px] text-rig-muted font-normal">Max: Rs. {coupon.maxDiscount.toLocaleString()}</span>
+                            )}
+                          </td>
+                          <td className="p-3 text-rig-muted text-xs">
+                            {coupon.minOrderAmount > 0 ? `Rs. ${coupon.minOrderAmount.toLocaleString()}` : 'None'}
+                          </td>
+                          <td className="p-3 text-rig-muted text-xs">
+                            {coupon.expiresAt ? new Date(coupon.expiresAt).toLocaleDateString() : 'Never'}
+                          </td>
+                          <td className="p-3 text-right">
+                            <button
+                              onClick={() => handleDeleteCoupon(coupon.id, coupon.code)}
+                              className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                              title="Delete coupon"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          ) : activeTab === 'Payments' ? (
+            <div className="space-y-6 bg-rig-background border border-rig-border rounded-2xl p-4 sm:p-8 shadow-sm">
+              <h3 className="text-lg font-bold text-rig-text mb-4 border-b border-rig-border pb-2">Payment Methods Setup</h3>
+              
+              {/* Cash on Delivery */}
+              <div className="bg-rig-surface border border-rig-border p-6 rounded-2xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-bold text-rig-text">Cash on Delivery (COD)</h4>
+                    <p className="text-xs text-rig-muted">Allow customers nationwide to pay in cash upon package arrival.</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer" 
+                      checked={paymentSettings.codEnabled ?? true} 
+                      onChange={(e) => updatePaymentSetting('codEnabled', e.target.checked)} 
+                    />
+                    <div className="w-11 h-6 bg-rig-background peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rig-primary"></div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Bank Transfer / Digital Wallet */}
+              <div className="bg-rig-surface border border-rig-border p-6 rounded-2xl space-y-4">
+                <div className="flex items-center justify-between border-b border-rig-border pb-4">
+                  <div>
+                    <h4 className="font-bold text-rig-text">Direct Bank Transfer / IBFT / Raast</h4>
+                    <p className="text-xs text-rig-muted">Show bank account info on checkout for direct wire transfer.</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer" 
+                      checked={paymentSettings.bankTransferEnabled ?? true} 
+                      onChange={(e) => updatePaymentSetting('bankTransferEnabled', e.target.checked)} 
+                    />
+                    <div className="w-11 h-6 bg-rig-background peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rig-primary"></div>
+                  </label>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-rig-muted">Account Title</label>
+                    <input 
+                      value={paymentSettings.accountTitle || 'RigStore Official'}
+                      onChange={(e) => updatePaymentSetting('accountTitle', e.target.value)}
+                      placeholder="e.g. RigStore Computers"
+                      className="w-full bg-rig-background border border-rig-border rounded-xl px-3 py-2 text-sm text-rig-text outline-none focus:border-rig-primary"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-rig-muted">Bank Name</label>
+                    <input 
+                      value={paymentSettings.bankName || 'Meezan Bank Ltd'}
+                      onChange={(e) => updatePaymentSetting('bankName', e.target.value)}
+                      placeholder="e.g. Meezan Bank, EasyPaisa, SadaPay"
+                      className="w-full bg-rig-background border border-rig-border rounded-xl px-3 py-2 text-sm text-rig-text outline-none focus:border-rig-primary"
+                    />
+                  </div>
+                  <div className="space-y-1 sm:col-span-2">
+                    <label className="text-xs font-bold text-rig-muted">Account Number / IBAN</label>
+                    <input 
+                      value={paymentSettings.accountNumber || 'PK36MEZN0001020304050607'}
+                      onChange={(e) => updatePaymentSetting('accountNumber', e.target.value)}
+                      placeholder="PK00 XXXX 0000 0000 0000 0000"
+                      className="w-full bg-rig-background border border-rig-border rounded-xl px-3 py-2 text-sm font-mono text-rig-text outline-none focus:border-rig-primary"
+                    />
+                  </div>
+                  <div className="space-y-1 sm:col-span-2">
+                    <label className="text-xs font-bold text-rig-muted">Payment Instructions Note</label>
+                    <textarea 
+                      rows={2}
+                      value={paymentSettings.paymentNotes || 'Please send your payment screenshot to WhatsApp support 0316-2975195 with your Order ID.'}
+                      onChange={(e) => updatePaymentSetting('paymentNotes', e.target.value)}
+                      className="w-full bg-rig-background border border-rig-border rounded-xl px-3 py-2 text-sm text-rig-text outline-none focus:border-rig-primary resize-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           ) : activeTab === 'AI Chatbot' ? (
             <div className="bg-rig-background border border-rig-border rounded-2xl p-4 sm:p-8 shadow-sm">
                <h3 className="text-lg font-bold text-rig-text mb-6 border-b border-rig-border pb-2">AI Chatbot Configuration</h3>
@@ -336,9 +700,9 @@ export default function SettingsDashboard({ siteSettings, updateSetting, handleS
               <div className="w-16 h-16 bg-rig-surface rounded-2xl flex items-center justify-center mx-auto mb-4 text-rig-muted border border-rig-border">
                 <Store size={32} />
               </div>
-              <h3 className="text-xl font-bold text-rig-text mb-2">Module Not Enabled</h3>
-              <p className="text-rig-muted max-w-md mx-auto">
-                The {activeTab} module is currently not enabled in your plan. Contact support to upgrade.
+              <h3 className="text-xl font-bold text-rig-text mb-2">{activeTab}</h3>
+              <p className="text-rig-muted max-w-md mx-auto text-sm">
+                This section is integrated and managed automatically according to your store configuration.
               </p>
             </div>
           )}

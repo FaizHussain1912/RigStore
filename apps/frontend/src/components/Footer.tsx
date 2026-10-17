@@ -18,7 +18,7 @@ export default function Footer({ settings }: { settings?: any }) {
         { label: "Graphic Cards", url: "/category/gpus" },
         { label: "LCD/LED Monitors", url: "/category/monitors" },
         { label: "Storage & SSDs", url: "/category/storage" },
-        { label: "Accessories", url: "/category/accessories" },
+        { label: "Accessories & Peripherals", url: "/category/peripherals" },
       ];
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -64,7 +64,7 @@ export default function Footer({ settings }: { settings?: any }) {
               <a href="#" className="w-9 h-9 rounded-full bg-rig-background border border-rig-border flex items-center justify-center text-rig-muted hover:text-white hover:border-rig-primary hover:bg-rig-primary/10 transition-colors">
                 <Youtube size={18} />
               </a>
-              <a href="#" className="w-9 h-9 rounded-full bg-rig-background border border-rig-border flex items-center justify-center text-rig-muted hover:text-white hover:border-rig-primary hover:bg-rig-primary/10 transition-colors">
+              <a href="https://wa.me/923262147419" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-rig-background border border-rig-border flex items-center justify-center text-rig-muted hover:text-white hover:border-rig-primary hover:bg-rig-primary/10 transition-colors" title="Chat on WhatsApp">
                 <MessageCircle size={18} />
               </a>
             </div>
@@ -97,8 +97,8 @@ export default function Footer({ settings }: { settings?: any }) {
             <ul className="space-y-3">
               <li><Link href="/about" className="text-rig-muted hover:text-rig-primary transition-colors">About Us</Link></li>
               <li><Link href="/contact" className="text-rig-muted hover:text-rig-primary transition-colors">Contact</Link></li>
-              <li><Link href="#" className="text-rig-muted hover:text-rig-primary transition-colors">Return & Exchange</Link></li>
-              <li><Link href="#" className="text-rig-muted hover:text-rig-primary transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/returns" className="text-rig-muted hover:text-rig-primary transition-colors">Return & Exchange</Link></li>
+              <li><Link href="/privacy" className="text-rig-muted hover:text-rig-primary transition-colors">Privacy Policy</Link></li>
             </ul>
           </div>
 

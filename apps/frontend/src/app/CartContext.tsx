@@ -12,6 +12,7 @@ export type CartItem = {
   basePrice: number;
   quantity: number;
   image?: string;
+  imageUrl?: string;
   productId?: string; // Reference for backend
   specs?: any;
 };
@@ -99,6 +100,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       basePrice: i.product.basePrice,
       quantity: i.quantity,
       image: i.product.imageUrl,
+      imageUrl: i.product.imageUrl,
       specs: i.product.specs
     }));
     setCart(formatted);
@@ -128,6 +130,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         basePrice: product.basePrice,
         quantity,
         image: product.imageUrl,
+        imageUrl: product.imageUrl,
         specs: product.specs
       }];
     }

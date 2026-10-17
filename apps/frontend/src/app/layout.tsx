@@ -4,6 +4,7 @@ import { CartProvider } from './CartContext';
 import { AuthProvider } from './AuthContext';
 import { WishlistProvider } from './WishlistContext';
 import { ToastProvider } from './ToastContext';
+import { CompareProvider } from './CompareContext';
 import Navbar from '../components/Navbar';
 import CartSidebar from '../components/CartSidebar';
 import WishlistSidebar from '../components/WishlistSidebar';
@@ -52,27 +53,29 @@ export default async function RootLayout({
             <ToastProvider>
               <AuthProvider>
                 <WishlistProvider>
-                  <CartProvider>
-                    <TrackingProvider>
-                      {(promoBanner.visible === true || promoBanner.visible === 'true') && promoBanner.text && (
-                        <div 
-                          className="w-full text-center py-2 text-sm font-bold px-4 text-white custom-promo-banner"
-                          style={{
-                            '--promo-bg-light': promoBanner.bgColorLight || '#4f46e5',
-                            '--promo-bg-dark': promoBanner.bgColorDark || '#e11d48'
-                          } as React.CSSProperties}
-                        >
-                          {promoBanner.text}
-                        </div>
-                      )}
-                      <Navbar customLinks={customNavbarLinks} generalSettings={generalSettings} />
-                      <CartSidebar />
-                      <WishlistSidebar />
-                      {children}
-                      <Footer settings={footerSettings} />
-                      <Chatbot settings={aiSettings} />
-                    </TrackingProvider>
-                  </CartProvider>
+                  <CompareProvider>
+                    <CartProvider>
+                      <TrackingProvider>
+                        {(promoBanner.visible === true || promoBanner.visible === 'true') && promoBanner.text && (
+                          <div 
+                            className="w-full text-center py-2 text-sm font-bold px-4 text-white custom-promo-banner"
+                            style={{
+                              '--promo-bg-light': promoBanner.bgColorLight || '#4f46e5',
+                              '--promo-bg-dark': promoBanner.bgColorDark || '#e11d48'
+                            } as React.CSSProperties}
+                          >
+                            {promoBanner.text}
+                          </div>
+                        )}
+                        <Navbar customLinks={customNavbarLinks} generalSettings={generalSettings} />
+                        <CartSidebar />
+                        <WishlistSidebar />
+                        {children}
+                        <Footer settings={footerSettings} />
+                        <Chatbot settings={aiSettings} />
+                      </TrackingProvider>
+                    </CartProvider>
+                  </CompareProvider>
                 </WishlistProvider>
               </AuthProvider>
             </ToastProvider>

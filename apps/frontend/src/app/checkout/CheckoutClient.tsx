@@ -32,8 +32,40 @@ export default function CheckoutClient({ shippingRate = 0 }: { shippingRate?: nu
   const [error, setError] = useState('');
   const [successOrderId, setSuccessOrderId] = useState<string | null>(null);
 
+  // Coupon state
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState('');
+
   const totalAmount = cart.reduce((sum, item) => sum + (item.basePrice * item.quantity), 0);
-  const grandTotal = totalAmount + shippingRate;
+  const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+  const grandTotal = Math.max(0, totalAmount - discountAmount + shippingRate);
+
+  const handleApplyCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!couponInput.trim()) return;
+    setCouponLoading(true);
+    setCouponError('');
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6767'}/api/coupons/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponInput.trim(), orderAmount: totalAmount })
+      });
+      const data = await res.json();
+      if (res.ok && data.valid) {
+        setAppliedCoupon({ code: data.code, discountAmount: data.discountAmount });
+        setCouponInput('');
+      } else {
+        setCouponError(data.error || 'Invalid coupon code');
+      }
+    } catch (err) {
+      setCouponError('Network error validating coupon');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6767'}/api/settings/public`)
@@ -74,10 +106,12 @@ export default function CheckoutClient({ shippingRate = 0 }: { shippingRate?: nu
         paymentMethod,
         guestName: shippingAddress.fullName,
         guestEmail: shippingAddress.email,
+        couponCode: appliedCoupon ? appliedCoupon.code : undefined,
         items: cart.map(i => ({ productId: i.productId || i.id, quantity: i.quantity }))
       } : {
         shippingAddress,
-        paymentMethod
+        paymentMethod,
+        couponCode: appliedCoupon ? appliedCoupon.code : undefined
       };
 
       const res = await fetch(url, {
@@ -342,11 +376,58 @@ export default function CheckoutClient({ shippingRate = 0 }: { shippingRate?: nu
               ))}
             </div>
             
+            {/* Coupon Code Section */}
+            <div className="border-t border-rig-border/50 pt-4 mb-4">
+              {appliedCoupon ? (
+                <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-green-500 block">Coupon Applied: {appliedCoupon.code}</span>
+                    <span className="text-[11px] text-green-400">Saved {formatPrice(discountAmount)}</span>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={() => setAppliedCoupon(null)}
+                    className="text-xs font-bold text-red-500 hover:text-red-400"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleApplyCoupon} className="space-y-1.5">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                      placeholder="Promo Code (e.g. RIG10)"
+                      className="flex-1 bg-rig-background border border-rig-border rounded-lg px-3 py-2 text-xs uppercase text-rig-text focus:outline-none focus:border-rig-primary"
+                    />
+                    <button
+                      type="submit"
+                      disabled={couponLoading || !couponInput.trim()}
+                      className="bg-rig-surface border border-rig-border hover:border-rig-primary text-rig-text px-3 py-2 rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+                    >
+                      {couponLoading ? '...' : 'Apply'}
+                    </button>
+                  </div>
+                  {couponError && (
+                    <p className="text-[11px] text-red-400 font-medium pl-1">{couponError}</p>
+                  )}
+                </form>
+              )}
+            </div>
+
             <div className="border-t border-rig-border/50 pt-4 space-y-3 mb-6">
               <div className="flex justify-between text-sm text-rig-muted">
                 <span>Subtotal</span>
                 <span>{formatPrice(totalAmount)}</span>
               </div>
+              {appliedCoupon && (
+                <div className="flex justify-between text-sm text-green-500 font-medium">
+                  <span>Discount ({appliedCoupon.code})</span>
+                  <span>-{formatPrice(discountAmount)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-sm text-rig-muted">
                 <span>Shipping</span>
                 <span>{shippingRate > 0 ? formatPrice(shippingRate) : 'Free'}</span>

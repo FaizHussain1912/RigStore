@@ -40,8 +40,8 @@ export default function CartSidebar() {
           ) : (
             cart.map((item) => (
               <div key={item.id} className="flex gap-4 items-center bg-rig-background p-3 rounded-lg border border-rig-border">
-                <Link href={`/product/${item.slug}`} onClick={() => setIsCartOpen(false)} className="w-16 h-16 bg-white/5 rounded flex items-center justify-center text-xs text-rig-muted uppercase font-bold hover:opacity-80 transition-opacity">
-                  {item.brand}
+                <Link href={`/product/${item.slug}`} onClick={() => setIsCartOpen(false)} className="w-16 h-16 bg-white/5 rounded flex items-center justify-center p-1 border border-rig-border shrink-0 hover:opacity-80 transition-opacity">
+                  <img src={item.imageUrl || item.image || '/images/gpu.png'} alt={item.name} className="max-w-full max-h-full object-contain" />
                 </Link>
                 <div className="flex-1">
                   <Link href={`/product/${item.slug}`} onClick={() => setIsCartOpen(false)}>

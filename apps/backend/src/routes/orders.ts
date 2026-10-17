@@ -29,7 +29,7 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
 // Checkout (create order from cart)
 router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
   try {
-    const { shippingAddress, paymentMethod } = req.body;
+    const { shippingAddress, paymentMethod, couponCode } = req.body;
 
     const cart = await prisma.cart.findUnique({
       where: { userId: req.user!.userId },
@@ -51,7 +51,27 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
     const itemsTotal = cart.items.reduce((sum, item) => {
       return sum + (item.product.basePrice * item.quantity);
     }, 0);
-    const totalAmount = itemsTotal + shippingRate;
+
+    // Apply Coupon if provided
+    let discountAmount = 0;
+    let appliedCoupon = null;
+    if (couponCode) {
+      const coupon = await prisma.coupon.findUnique({ where: { code: String(couponCode).trim().toUpperCase() } });
+      if (coupon && coupon.isActive && (!coupon.expiresAt || new Date(coupon.expiresAt) > new Date())) {
+        if (itemsTotal >= coupon.minOrderAmount) {
+          if (coupon.discountType === 'PERCENTAGE') {
+            discountAmount = (itemsTotal * coupon.discountValue) / 100;
+            if (coupon.maxDiscount && discountAmount > coupon.maxDiscount) discountAmount = coupon.maxDiscount;
+          } else {
+            discountAmount = coupon.discountValue;
+          }
+          discountAmount = Math.min(discountAmount, itemsTotal);
+          appliedCoupon = coupon.code;
+        }
+      }
+    }
+
+    const totalAmount = Math.max(0, itemsTotal - discountAmount + shippingRate);
 
     // Format full address as "Address, Area, City, ZipCode, Country"
     const fullAddress = shippingAddress 
@@ -64,6 +84,8 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
         userId: req.user!.userId,
         status: 'PENDING',
         totalAmount,
+        couponCode: appliedCoupon,
+        discountAmount: Math.round(discountAmount),
         phone: shippingAddress?.phone,
         address: fullAddress,
         paymentMethod: paymentMethod || 'Cash on Delivery',
@@ -139,7 +161,7 @@ router.post('/:id/cancel-request', requireAuth, async (req: AuthRequest, res) =>
 // Guest Checkout (No auth required)
 router.post('/guest-checkout', async (req, res) => {
   try {
-    const { shippingAddress, paymentMethod, items, guestName, guestEmail } = req.body;
+    const { shippingAddress, paymentMethod, items, guestName, guestEmail, couponCode } = req.body;
 
     if (!items || items.length === 0) {
       return res.status(400).json({ error: 'Cart is empty' });
@@ -174,7 +196,26 @@ router.post('/guest-checkout', async (req, res) => {
       });
     }
 
-    const totalAmount = itemsTotal + shippingRate;
+    // Apply Coupon if provided
+    let discountAmount = 0;
+    let appliedCoupon = null;
+    if (couponCode) {
+      const coupon = await prisma.coupon.findUnique({ where: { code: String(couponCode).trim().toUpperCase() } });
+      if (coupon && coupon.isActive && (!coupon.expiresAt || new Date(coupon.expiresAt) > new Date())) {
+        if (itemsTotal >= coupon.minOrderAmount) {
+          if (coupon.discountType === 'PERCENTAGE') {
+            discountAmount = (itemsTotal * coupon.discountValue) / 100;
+            if (coupon.maxDiscount && discountAmount > coupon.maxDiscount) discountAmount = coupon.maxDiscount;
+          } else {
+            discountAmount = coupon.discountValue;
+          }
+          discountAmount = Math.min(discountAmount, itemsTotal);
+          appliedCoupon = coupon.code;
+        }
+      }
+    }
+
+    const totalAmount = Math.max(0, itemsTotal - discountAmount + shippingRate);
 
     // Format full address as "Address, Area, City, ZipCode, Country"
     const fullAddress = shippingAddress 
@@ -188,6 +229,8 @@ router.post('/guest-checkout', async (req, res) => {
         guestEmail,
         status: 'PENDING',
         totalAmount,
+        couponCode: appliedCoupon,
+        discountAmount: Math.round(discountAmount),
         phone: shippingAddress?.phone,
         address: fullAddress,
         paymentMethod: paymentMethod || 'Cash on Delivery',

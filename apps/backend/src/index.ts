@@ -9,6 +9,10 @@ import cartRouter from './routes/cart';
 import wishlistRouter from './routes/wishlist';
 import ordersRouter from './routes/orders';
 import adminRouter from './routes/admin';
+import reviewsRouter from './routes/reviews';
+import couponsRouter from './routes/coupons';
+import builderRouter from './routes/builder';
+import contactRouter from './routes/contact';
 
 const prisma = new PrismaClient();
 const app = express();
@@ -79,12 +83,16 @@ app.get('/', (req, res) => {
   res.json({ message: 'RigStore Backend API is running!' });
 });
 
-// --- AUTH API ---
+// --- API ROUTES ---
 app.use('/api/auth', authRouter);
 app.use('/api/cart', cartRouter);
 app.use('/api/wishlist', wishlistRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/reviews', reviewsRouter);
+app.use('/api/coupons', couponsRouter);
+app.use('/api/builder', builderRouter);
+app.use('/api/contact', contactRouter);
 
 // --- PUBLIC SETTINGS API ---
 app.get('/api/settings/public', async (req, res) => {
@@ -107,10 +115,49 @@ app.get('/api/settings/public', async (req, res) => {
   }
 });
 
+// --- SEARCH PRODUCTS API ---
+app.get('/api/products/search', async (req, res) => {
+  try {
+    const q = req.query.q as string;
+    if (!q || !q.trim()) {
+      return res.json([]);
+    }
+
+    const searchTerm = q.trim();
+
+    const products = await prisma.product.findMany({
+      where: {
+        OR: [
+          { name: { contains: searchTerm, mode: 'insensitive' } },
+          { brand: { contains: searchTerm, mode: 'insensitive' } },
+          { description: { contains: searchTerm, mode: 'insensitive' } },
+          { category: { name: { contains: searchTerm, mode: 'insensitive' } } }
+        ]
+      },
+      include: {
+        category: true,
+        inventory: true
+      },
+      take: 20
+    });
+
+    const parsed = products.map(p => ({
+      ...p,
+      specs: p.specs,
+      compatibility: p.compatibility
+    }));
+
+    res.json(parsed);
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({ error: 'Failed to search products' });
+  }
+});
+
 // --- CATALOG API ---
 app.get('/api/products', async (req, res) => {
   try {
-    const { sort, minPrice, maxPrice } = req.query;
+    const { sort, minPrice, maxPrice, search } = req.query;
     let orderBy: any = undefined;
 
     if (sort === 'price_asc') {
@@ -126,6 +173,15 @@ app.get('/api/products', async (req, res) => {
       whereClause.basePrice = {};
       if (minPrice && !isNaN(Number(minPrice))) whereClause.basePrice.gte = Number(minPrice);
       if (maxPrice && !isNaN(Number(maxPrice))) whereClause.basePrice.lte = Number(maxPrice);
+    }
+
+    if (search && typeof search === 'string' && search.trim()) {
+      const s = search.trim();
+      whereClause.OR = [
+        { name: { contains: s, mode: 'insensitive' } },
+        { brand: { contains: s, mode: 'insensitive' } },
+        { category: { name: { contains: s, mode: 'insensitive' } } }
+      ];
     }
 
     const products = await prisma.product.findMany({
@@ -182,6 +238,9 @@ app.get('/api/product/:slug', async (req, res) => {
 // --- CATEGORY API ---
 app.get('/api/category/:slug', async (req, res) => {
   try {
+    let slug = req.params.slug;
+    if (slug === 'accessories') slug = 'peripherals';
+
     const { sort, minPrice, maxPrice, brand, ...filters } = req.query;
     let orderBy: any = undefined;
 
@@ -193,9 +252,12 @@ app.get('/api/category/:slug', async (req, res) => {
       orderBy = { inventory: { salesVelocity7Days: 'desc' } };
     }
 
-    const whereClause: any = {
-      category: { slug: req.params.slug }
-    };
+    const whereClause: any = {};
+
+    // If slug is NOT 'all', filter by category slug
+    if (slug !== 'all') {
+      whereClause.category = { slug };
+    }
 
     if (minPrice || maxPrice) {
       whereClause.basePrice = {};
