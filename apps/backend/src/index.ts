@@ -116,6 +116,22 @@ app.get('/api/settings/public', async (req, res) => {
 });
 
 // --- SEARCH PRODUCTS API ---
+const categorySynonyms: Record<string, string[]> = {
+  'laptops': ['laptop', 'laptops', 'notebook', 'notebooks'],
+  'mice': ['mouse', 'mice'],
+  'keyboards': ['keyboard', 'keyboards'],
+  'monitors': ['monitor', 'monitors', 'display', 'screen', 'screens'],
+  'gpus': ['gpu', 'gpus', 'graphic card', 'graphic cards', 'graphics card', 'graphics cards', 'vga', 'video card'],
+  'processors': ['processor', 'processors', 'cpu', 'cpus'],
+  'storage': ['storage', 'ssd', 'ssds', 'hdd', 'hard drive', 'hard disk', 'nvme'],
+  'memory': ['ram', 'memory', 'ddr4', 'ddr5'],
+  'coolers': ['cooler', 'coolers', 'aio', 'cooling', 'heatsink', 'fan'],
+  'cases': ['case', 'cases', 'chassis', 'casing', 'cabinet'],
+  'psus': ['psu', 'psus', 'power supply', 'power supplies'],
+  'headphones': ['headphone', 'headphones', 'headset', 'headsets', 'earphone', 'earphones'],
+  'desktops': ['desktop', 'desktops', 'prebuilt', 'pc', 'gaming pc'],
+};
+
 app.get('/api/products/search', async (req, res) => {
   try {
     const q = req.query.q as string;
@@ -123,31 +139,132 @@ app.get('/api/products/search', async (req, res) => {
       return res.json([]);
     }
 
-    const searchTerm = q.trim();
+    const cleanQ = q.trim();
+    const lowerQ = cleanQ.toLowerCase();
+    const tokens = lowerQ.split(/\s+/).filter(Boolean);
+
+    // 1. Identify category intent
+    const categories = await prisma.category.findMany();
+    let targetCategoryIds: string[] = [];
+    let isCategoryIntent = false;
+
+    for (const cat of categories) {
+      const synonyms = categorySynonyms[cat.slug] || [cat.slug, cat.name.toLowerCase()];
+      const isMatch = synonyms.some(syn => lowerQ === syn || tokens.includes(syn));
+      if (isMatch) {
+        targetCategoryIds.push(cat.id);
+        isCategoryIntent = true;
+      }
+    }
+
+    // Check if it's a pure category search (e.g. 'laptop', 'laptops', 'mouse', 'gpus')
+    const isPureCategory = targetCategoryIds.length > 0 && categories.some(c => {
+      const syns = categorySynonyms[c.slug] || [c.slug, c.name.toLowerCase()];
+      return syns.includes(lowerQ);
+    });
+
+    let whereClause: any;
+
+    if (isPureCategory) {
+      // Pure category search: strictly match products belonging to this category or with the term in their title
+      whereClause = {
+        OR: [
+          { categoryId: { in: targetCategoryIds } },
+          { name: { contains: cleanQ, mode: 'insensitive' } }
+        ]
+      };
+    } else if (isCategoryIntent) {
+      // Compound search (e.g. 'gaming laptop', 'logitech mouse', 'samsung ssd')
+      const nonCategoryTokens = tokens.filter(t => {
+        for (const list of Object.values(categorySynonyms)) {
+          if (list.includes(t)) return false;
+        }
+        return true;
+      });
+
+      const andConditions: any[] = [];
+      if (targetCategoryIds.length > 0) {
+        andConditions.push({
+          OR: [
+            { categoryId: { in: targetCategoryIds } },
+            { name: { contains: cleanQ, mode: 'insensitive' } }
+          ]
+        });
+      }
+
+      if (nonCategoryTokens.length > 0) {
+        nonCategoryTokens.forEach(token => {
+          andConditions.push({
+            OR: [
+              { name: { contains: token, mode: 'insensitive' } },
+              { brand: { contains: token, mode: 'insensitive' } },
+              { description: { contains: token, mode: 'insensitive' } }
+            ]
+          });
+        });
+      }
+
+      whereClause = andConditions.length > 0 ? { AND: andConditions } : {};
+    } else {
+      // Keyword/brand search (e.g. 'ThinkPad', 'RTX 4070', 'Corsair', 'White')
+      whereClause = {
+        OR: [
+          { name: { contains: cleanQ, mode: 'insensitive' } },
+          { brand: { contains: cleanQ, mode: 'insensitive' } },
+          { description: { contains: cleanQ, mode: 'insensitive' } }
+        ]
+      };
+    }
 
     const products = await prisma.product.findMany({
-      where: {
-        OR: [
-          { name: { contains: searchTerm, mode: 'insensitive' } },
-          { brand: { contains: searchTerm, mode: 'insensitive' } },
-          { description: { contains: searchTerm, mode: 'insensitive' } },
-          { category: { name: { contains: searchTerm, mode: 'insensitive' } } }
-        ]
-      },
+      where: whereClause,
       include: {
         category: true,
         inventory: true
       },
-      take: 20
+      take: 100
     });
 
-    const parsed = products.map(p => ({
-      ...p,
-      specs: p.specs,
-      compatibility: p.compatibility
-    }));
+    // 2. Score and rank by relevance
+    const ranked = products.map(product => {
+      let score = 0;
+      const pName = product.name.toLowerCase();
+      const pBrand = (product.brand || '').toLowerCase();
+      const pDesc = (product.description || '').toLowerCase();
+      const pCat = (product.category?.name || '').toLowerCase();
 
-    res.json(parsed);
+      // Full exact name match
+      if (pName === lowerQ) score += 200;
+      else if (pName.startsWith(lowerQ)) score += 120;
+      else if (pName.includes(lowerQ)) score += 100;
+
+      // Category match
+      if (targetCategoryIds.includes(product.categoryId)) score += 80;
+      else if (pCat.includes(lowerQ)) score += 70;
+
+      // Brand match
+      if (pBrand === lowerQ) score += 60;
+      else if (pBrand.includes(lowerQ)) score += 40;
+
+      // Keyword token matches
+      tokens.forEach(tok => {
+        if (pName.includes(tok)) score += 25;
+        if (pBrand.includes(tok)) score += 15;
+      });
+
+      if (!isCategoryIntent && pDesc.includes(lowerQ)) score += 10;
+
+      return {
+        ...product,
+        specs: product.specs,
+        compatibility: product.compatibility,
+        _searchScore: score
+      };
+    });
+
+    ranked.sort((a, b) => b._searchScore - a._searchScore);
+
+    res.json(ranked);
   } catch (error) {
     console.error('Search error:', error);
     res.status(500).json({ error: 'Failed to search products' });
