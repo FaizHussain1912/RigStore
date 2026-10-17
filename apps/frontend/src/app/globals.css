@@ -64,3 +64,9 @@
     color: var(--bento-btn-text-dark);
   }
 }
+
+@media print {
+  nav, footer, header, .no-print {
+    display: none !important;
+  }
+}

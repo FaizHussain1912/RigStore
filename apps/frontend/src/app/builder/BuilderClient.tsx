@@ -190,9 +190,174 @@ export default function BuilderClient() {
     }
   };
 
-  // Print Build Sheet
+  // Print Build Sheet - Isolated to only the Build Summary
   const handlePrintBuild = () => {
-    window.print();
+    const componentList = [
+      { category: 'CPU', label: 'Processor', item: build.cpu },
+      { category: 'MOTHERBOARD', label: 'Motherboard', item: build.motherboard },
+      { category: 'RAM', label: 'Memory (RAM)', item: build.ram?.[0] },
+      { category: 'GPU', label: 'Graphics Card (GPU)', item: build.gpu?.[0] },
+      { category: 'PSU', label: 'Power Supply (PSU)', item: build.psu },
+      { category: 'CASE', label: 'PC Case / Chassis', item: build.pcCase },
+      { category: 'COOLER', label: 'CPU Cooler', item: build.cooler },
+      { category: 'STORAGE', label: 'Storage Drive (SSD/HDD)', item: build.storage?.[0] },
+    ];
+
+    const selectedRows = componentList
+      .filter((c): c is { category: string; label: string; item: any } => Boolean(c.item))
+      .map(c => `
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
+          <div style="flex: 1; padding-right: 16px;">
+            <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">${c.category}</div>
+            <div style="font-size: 13px; font-weight: 700; color: #0f172a; margin-top: 2px;">${c.item.name}</div>
+          </div>
+          <div style="font-size: 13px; font-weight: 800; color: #0f172a; white-space: nowrap; text-align: right;">
+            Rs. ${(c.item.basePrice || 0).toLocaleString()}
+          </div>
+        </div>
+      `).join('');
+
+    const isCompatible = issues.length === 0;
+    const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>RigStore - Build Summary</title>
+          <style>
+            @page { margin: 10mm; size: A4 portrait; }
+            * { box-sizing: border-box; }
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+              margin: 0; padding: 16px; color: #0f172a; background: #ffffff;
+              -webkit-print-color-adjust: exact; print-color-adjust: exact;
+            }
+            .card {
+              max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 20px; padding: 28px;
+              box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            }
+            .brand-header {
+              display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 16px;
+            }
+            .brand-logo {
+              font-size: 24px; font-weight: 900; color: #4338ca; letter-spacing: -0.5px;
+            }
+            .brand-sub {
+              font-size: 11px; color: #64748b; margin-top: 2px;
+            }
+            .card-title {
+              font-size: 20px; font-weight: 900; color: #0f172a; margin: 0 0 16px 0;
+            }
+            .compat-box {
+              padding: 12px 16px; border-radius: 12px; margin-bottom: 20px;
+              background: ${isCompatible ? '#f0fdf4' : '#fef2f2'};
+              border: 1px solid ${isCompatible ? '#bbf7d0' : '#fecaca'};
+            }
+            .compat-title {
+              font-size: 13px; font-weight: 800; color: ${isCompatible ? '#15803d' : '#b91c1c'};
+            }
+            .compat-desc {
+              font-size: 11px; color: ${isCompatible ? '#16a34a' : '#dc2626'}; margin-top: 2px;
+            }
+            .components-list {
+              margin-bottom: 20px;
+            }
+            .metric-row {
+              display: flex; justify-content: space-between; align-items: center;
+              padding: 12px 0; border-top: 1px solid #e2e8f0; font-size: 13px;
+            }
+            .metric-label {
+              color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 6px;
+            }
+            .metric-val {
+              font-family: monospace; font-weight: 800; color: #0f172a; font-size: 14px;
+            }
+            .total-row {
+              display: flex; justify-content: space-between; align-items: flex-end;
+              padding-top: 14px; margin-top: 4px; border-top: 2px dashed #cbd5e1;
+            }
+            .total-label {
+              font-size: 14px; font-weight: 700; color: #475569;
+            }
+            .total-price {
+              font-size: 28px; font-weight: 900; color: #4338ca; letter-spacing: -0.5px;
+            }
+            .footer-strip {
+              margin-top: 24px; padding-top: 14px; border-top: 1px solid #f1f5f9;
+              display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="brand-header">
+              <div>
+                <div class="brand-logo">RIGSTORE</div>
+                <div class="brand-sub">Custom PC Builder &bull; ${dateStr}</div>
+              </div>
+              <div style="font-size: 11px; font-weight: 700; color: #4338ca; background: #eef2ff; padding: 4px 10px; border-radius: 6px; border: 1px solid #e0e7ff;">
+                Official Build Sheet
+              </div>
+            </div>
+
+            <h2 class="card-title">Build Summary</h2>
+
+            <div class="compat-box">
+              <div class="compat-title">${isCompatible ? '✔ 100% Compatible Build' : '⚠ Compatibility Attention Needed'}</div>
+              <div class="compat-desc">${isCompatible ? 'All selected hardware will work together flawlessly without bottleneck.' : 'Please resolve compatibility issues.'}</div>
+            </div>
+
+            <div class="components-list">
+              ${selectedRows.length > 0 ? selectedRows : '<div style="text-align: center; color: #94a3b8; padding: 20px;">No components selected yet.</div>'}
+            </div>
+
+            <div class="metric-row">
+              <span class="metric-label">⚡ Estimated Power Draw</span>
+              <span class="metric-val">${getTotalWatts()}W</span>
+            </div>
+
+            <div class="total-row">
+              <span class="total-label">Total Price</span>
+              <span class="total-price">Rs. ${getTotalPrice().toLocaleString()}</span>
+            </div>
+
+            <div class="footer-strip">
+              <span>RigStore Pakistan &bull; 0316-2975195</span>
+              <span>https://rigstore.com</span>
+            </div>
+          </div>
+
+          <script>
+            window.onload = () => {
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document;
+    if (doc) {
+      doc.open();
+      doc.write(html);
+      doc.close();
+
+      setTimeout(() => {
+        if (document.body.contains(iframe)) {
+          document.body.removeChild(iframe);
+        }
+      }, 10000);
+    }
   };
 
   // Load a preset build
